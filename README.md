@@ -30,7 +30,7 @@ Ortholyse est une application desktop permettant aux orthophonistes d'analyser a
 ## Utilisation
 - **Lancer l'application** :
    ```sh
-   python frontend/main.py
+   python app/main.py
    ```
 - **Importer ou enregistrer un fichier audio** pour le transcrire et l'analyser.
 - **Écouter et modifier les transcriptions** en temps réel.
