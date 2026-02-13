@@ -6,8 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-.idea
-
 # Distribution / packaging
 .Python
 build/
@@ -75,7 +73,6 @@ docs/_build/
 
 # PyBuilder
 .pybuilder/
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -85,22 +82,20 @@ profile_default/
 ipython_config.py
 
 # pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+.python-version
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   with no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
 #Pipfile.lock
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#   This is especially recommended for binary dependencies (http://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control).
+#   However, if you need to support different versions of python or different platforms,
+#   you might want to exclude poetry.lock to force a fresh resolve.
 #poetry.lock
 
 # pdm
@@ -110,6 +105,8 @@ ipython_config.py
 #   in version control.
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
+.pdm-python
+.pdm-build/
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
@@ -154,34 +151,19 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-frontend/test.py
-.idea/vcs.xml
-backend/temp_alignment_output/corpus/videoplayback.lab
-backend/temp_alignment_output/corpus/videoplayback.mp4
-backend/test.py
-backend/test.py
-Untitled.ipynb
-train_lemmes.tsv
-Lexique383
-modele_finetune
-output
-projet_lemmatiseur
-train_ia.ipynb
-*.ipynb
-test_lemmes.tsv
-*.ipynb
-projet_lemmatiseur/config.cfg
-train.ipynb
-train_ia.ipynb
-_templates
-_build
-*.rst
-*.docx
-conf.py
-*.bat
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+output/
+*.mp3
+*.wav
+*.pdf
+!app/analyse_Ortholyse.pdf
