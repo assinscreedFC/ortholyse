@@ -1,0 +1,35 @@
+name: Update Copyright Year
+
+on:
+  schedule:
+    # Run at 00:00 on January 1st every year
+    - cron: '0 0 1 1 *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-copyright:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update Copyright Year in README
+        run: |
+          YEAR=$(date +'%Y')
+          # Updates "Copyright © 2024 - YYYY" or "Copyright © 2024" to "Copyright © 2024 - $YEAR"
+          sed -i -E "s/Copyright © 2024( - [0-9]{4})?/Copyright © 2024 - $YEAR/" README.md
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push changes
+        if: steps.git-check.outputs.changes == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git commit -am "docs: update copyright year to $(date +'%Y')"
+          git push

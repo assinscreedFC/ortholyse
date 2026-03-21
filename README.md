@@ -131,7 +131,7 @@ Contributions are welcome! If you're a developer or a speech therapist with idea
 ## 📝 License
 
 This project is intended for educational and professional assistance purposes.
-Copyright © 2024. All rights reserved.
+Copyright © 2024 - 2026. All rights reserved.
 
 ---
 <div align="center">
