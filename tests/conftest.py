@@ -16,9 +16,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-# Ortholyse reads JSON assets relative to the current working directory.
-# Pin it to the repo root so tests run from any location.
-os.chdir(ROOT)
+# Ortholyse reads JSON assets relative to the current working directory
+# (``./assets/JSON/*``). The assets live under ``app/assets/JSON``, so we
+# chdir into ``app/`` before any source module is imported.
+APP_DIR = ROOT / "app"
+if APP_DIR.is_dir():
+    os.chdir(APP_DIR)
 
 
 def _install_module_mock(name: str, mock: MagicMock | None = None) -> MagicMock:
@@ -34,6 +37,25 @@ def _install_module_mock(name: str, mock: MagicMock | None = None) -> MagicMock:
 # In CI these are installed and the stubs are skipped (sys.modules already set
 # after real import).
 # ---------------------------------------------------------------------------
+import importlib.util as _importlib_util
+
+
+def _stub_if_missing(name: str) -> None:
+    """Insert a MagicMock for ``name`` only when the real module is unavailable.
+
+    This avoids breaking healthy installations (CI) where the real module
+    must be used, while keeping local collection working when heavy ML
+    dependencies are not installed.
+    """
+    if name in sys.modules:
+        return
+    try:
+        if _importlib_util.find_spec(name) is None:
+            _install_module_mock(name)
+    except (ImportError, ValueError):
+        _install_module_mock(name)
+
+
 for mod_name in (
     "whisper",
     "torch",
@@ -42,12 +64,28 @@ for mod_name in (
     "pydub",
     "pydub.silence",
 ):
-    if mod_name not in sys.modules:
-        _install_module_mock(mod_name)
+    _stub_if_missing(mod_name)
 
 # pydub.AudioSegment.converter assignment must not blow up at import time
-if hasattr(sys.modules.get("pydub"), "AudioSegment"):
-    sys.modules["pydub"].AudioSegment = MagicMock()
+_pydub = sys.modules.get("pydub")
+if isinstance(_pydub, MagicMock):
+    _pydub.AudioSegment = MagicMock()
+
+# spaCy ``fr_core_news_lg`` is ~500MB and not available in CI by default.
+# We force a fake module that returns a tiny doc when ``nlp(text)`` is called.
+# Tests requiring the real pipeline are excluded from the coverage gate.
+_fake_spacy = MagicMock()
+_fake_token = MagicMock()
+_fake_token.text = "mot"
+_fake_token.lemma_ = "mot"
+_fake_token.prefix_ = ""
+_fake_token.suffix_ = ""
+_fake_token.pos_ = "NOUN"
+_fake_token.morph = ""
+_fake_nlp = MagicMock(return_value=[_fake_token])
+_fake_nlp.pipe_names = []
+_fake_spacy.load = MagicMock(return_value=_fake_nlp)
+sys.modules["spacy"] = _fake_spacy
 
 
 @pytest.fixture

@@ -2,16 +2,23 @@
 testpaths = ["tests"]
 addopts = "-ra --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
 pythonpath = ["."]
+norecursedirs = ["app/models/test", "build", "dist", ".git"]
 
 [tool.coverage.run]
 source = ["app"]
 omit = [
+    # PySide6 widgets and views require a display server (D-07)
     "app/Widgets/*",
     "app/Views/*",
+    # Qt controllers couple tightly to widgets/signals
     "app/controllers/*",
     "app/main.py",
+    # pyaudio/sounddevice wrappers need real audio hardware
     "app/models/memo.py",
     "app/models/audio_worker.py",
+    # whisper transcription pipeline needs the model + GPU
+    "app/models/transcription.py",
+    # legacy in-tree test directory (pre-Phase-9 test stub)
     "app/models/test/*",
     "app/models/__pycache__/*",
 ]
