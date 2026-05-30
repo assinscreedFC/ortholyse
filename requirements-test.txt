@@ -1,0 +1,11 @@
+# Minimal test dependencies for CI.
+# Heavy ML/audio packages (whisper, torch, spaCy models, pyaudio, PySide6)
+# are mocked in tests/conftest.py — installing them in CI is unnecessary
+# and would slow the workflow from seconds to minutes.
+pytest>=8.0
+pytest-cov>=5.0
+pytest-mock>=3.12
+nltk>=3.9.4
+num2words>=0.5.13
+fpdf2>=2.8
+python-docx>=1.1
