@@ -1,0 +1,25 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/Widgets/*",
+    "app/Views/*",
+    "app/controllers/*",
+    "app/main.py",
+    "app/models/memo.py",
+    "app/models/audio_worker.py",
+    "app/models/test/*",
+    "app/models/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
