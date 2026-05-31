@@ -167,3 +167,8 @@ output/
 *.wav
 *.pdf
 !app/analyse_Ortholyse.pdf
+
+# Local scan artifacts and Claude workspace
+.claude/
+gitleaks-*.json
+*.pre-phase*.bak
