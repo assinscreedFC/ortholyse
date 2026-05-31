@@ -19,6 +19,21 @@ from app.models.operation_fichier import (
 
 modele_dispo = ["base", "small", "medium", "turbo"]
 
+# Module-level cache for whisper model to avoid reloading 800Mo-1.5Go per transcription.
+_WHISPER_MODEL = None
+_WHISPER_MODEL_KEY = None
+
+
+def _get_whisper_model(model_name: str, device: str):
+    """Return a cached whisper model, loading it once per (name, device) pair."""
+    global _WHISPER_MODEL, _WHISPER_MODEL_KEY
+    key = (model_name, device)
+    if _WHISPER_MODEL is None or _WHISPER_MODEL_KEY != key:
+        logger.info("loading whisper model: %s (device=%s)", model_name, device)
+        _WHISPER_MODEL = whisper.load_model(model_name, device=device)
+        _WHISPER_MODEL_KEY = key
+    return _WHISPER_MODEL
+
 
 
 def custom_tokenize(text):
@@ -268,8 +283,8 @@ def transcription(file_path, ):
     #elif torch.backends.mps.is_available():
     #   dc = "mps"
 
-    # Charger le modèle Whisper demandé par l'utilisateur
-    modele = whisper.load_model(modele_dispo[get_model()], device=dc)
+    # Charger le modèle Whisper demandé par l'utilisateur (cache module-level).
+    modele = _get_whisper_model(modele_dispo[get_model()], device=dc)
 
     results = []
     if useSplit:
