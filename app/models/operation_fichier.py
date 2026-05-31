@@ -3,13 +3,69 @@
 # Email   : danil.guidjou@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
 import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 from pydub import AudioSegment
 from pydub.silence import detect_silence
+
+try:
+    import magic  # type: ignore
+    _HAS_MAGIC = True
+except Exception:  # ImportError or libmagic native missing
+    magic = None
+    _HAS_MAGIC = False
+
+logger = logging.getLogger(__name__)
+
+# Whitelist of accepted audio formats (extension -> pydub format token).
+FORMAT_FROM_EXT = {
+    "mp3": "mp3",
+    "wav": "wav",
+    "m4a": "m4a",
+    "mp4": "mp4",
+    "ogg": "ogg",
+    "flac": "flac",
+}
+
+# Accepted MIME types when python-magic + libmagic native lib are present.
+AUDIO_MIME_WHITELIST = {
+    "audio/mpeg",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/mp4",
+    "audio/x-m4a",
+    "audio/ogg",
+    "audio/flac",
+    "audio/x-flac",
+    "video/mp4",  # mp4 container with audio
+}
+
+
+def _validate_audio_file(file_path: str) -> str:
+    """Validate audio file via extension whitelist and (when available) MIME sniffing.
+
+    Returns the canonical pydub format token. Raises ValueError on unknown
+    extension or MIME mismatch. MIME check is a no-op if python-magic / libmagic
+    native bindings are not loadable on the current platform.
+    """
+    ext = Path(file_path).suffix.lstrip(".").lower()
+    if ext not in FORMAT_FROM_EXT:
+        raise ValueError(f"unsupported audio extension: {ext!r}")
+
+    if _HAS_MAGIC:
+        try:
+            mime = magic.from_file(file_path, mime=True)
+        except Exception as e:
+            logger.warning("magic MIME sniff failed for %s: %s", file_path, e)
+        else:
+            if mime not in AUDIO_MIME_WHITELIST:
+                raise ValueError(f"unsupported audio MIME type: {mime!r}")
+    return FORMAT_FROM_EXT[ext]
 
 def find_ffmpeg():
     """Return a usable ffmpeg path.
@@ -63,17 +119,19 @@ def file_size_sec(file_path: str) -> float:
 
 def extract_audio_fmp4(file_pth: str) -> str:
     """"
-    Extration d'un audio d'un fichier mp4
-    je prends l'intiative de faire cette extration car un fichier mp3 est moins lourd qu'un fichier mp4 
-    -> plus optimiser pour la transcription
-    --> ca renvoit le nom du fichier dans le quel est stocker l'audio de cette mp4
-    ---> il faut supprimer la convertion a la fin du traitement
+    Extration d'un audio d'un fichier mp4.
+
+    Writes to a unique temp file (tempfile.mkstemp with delete=False semantics)
+    so concurrent runs do not collide and never overwrite a shared filename.
+    Caller is responsible for deleting the returned path after use (the existing
+    transcription() pipeline already does so via os.remove()).
     """
-    output_name = "convertion.mp3"
-    frmt = reel_file_format(file_pth)
-    audio = AudioSegment.from_file(file_pth , format=frmt)
+    frmt = _validate_audio_file(file_pth)
+    fd, output_name = tempfile.mkstemp(prefix="ortholyse_convert_", suffix=".mp3")
+    os.close(fd)  # we just want the unique path; pydub will write to it.
+    audio = AudioSegment.from_file(file_pth, format=frmt)
     audio.export(output_name, format="mp3")
-    return  output_name
+    return output_name
 
 def detect_silnce_inInterval(audio):
     
@@ -97,14 +155,15 @@ def detect_silnce_inInterval(audio):
 
 def split_audio(file_path):
     """
-    Decouper un fichier en plusieurs sous-fichiers de durée inferieurs a stocker dans le repertoir filleSpliter
+    Decouper un fichier en plusieurs sous-fichiers de durée inferieurs.
+
+    Writes fragments to a unique tempfile.mkdtemp directory instead of a fixed
+    "fileSpliter/" in the CWD: avoids collisions across runs and ensures the
+    patient-voice fragments end up under a tracked tempdir.
     """
-    #creation d'un  repertoire temporaire (on le suprime a fin de la transcrption ) pour stocker les fichier génerer
-    output_dir = os.path.join(os.getcwd(), "fileSpliter")
-    if not os.path.exists(output_dir):
-        os.makedirs("fileSpliter")
-    
-    frmt = reel_file_format(file_path)
+    output_dir = tempfile.mkdtemp(prefix="ortholyse_split_")
+
+    frmt = _validate_audio_file(file_path)
     audio = AudioSegment.from_file(file_path, format=frmt)
     
     duration = file_size_ms(file_path)  
@@ -131,9 +190,8 @@ def split_audio(file_path):
 
         end = min(duration , start+290000+ stop) #on decoupe l'audio en morceau de 5min -> 300sec -> 30000ms
         segement = audio[start:end]
-        #enregitrement dans le repertoir fileSpliter
-        file_dir = os.path.join(output_dir,f'{file_number}.mp3')
-        print(file_dir)
+        file_dir = os.path.join(output_dir, f'{file_number}.mp3')
+        logger.debug("writing split fragment %s", file_dir)
         segement.export(file_dir, format=reel_file_format(file_path))
         start = end #actualise le debut pour la prochaine decoupe && condition de sortie de while
     

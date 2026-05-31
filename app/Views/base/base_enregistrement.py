@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QSize
 import os
+import tempfile
 from app.controllers.Menu_controllers import NavigationController
 
 # Fusion des métaclasses
@@ -27,7 +28,10 @@ class BaseEnregistrement(QWidget, metaclass=WidgetABCMeta):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.controller = NavigationController()
-        self.audio_filename = os.path.join(os.getcwd(), "enregistrement_audio.wav")
+        # Default recording filename lives in a unique tempfile to avoid collisions
+        # and to ensure patient-voice files do not pile up in the CWD (SEC-F4).
+        fd, self.audio_filename = tempfile.mkstemp(prefix="ortholyse_record_", suffix=".wav")
+        os.close(fd)
         self.font, self.font_family = self.controller.set_font('./assets/Fonts/Poppins/Poppins-SemiBold.ttf')
 
         # Layout principal

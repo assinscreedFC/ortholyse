@@ -99,7 +99,13 @@ class TestExtractAudioFmp4:
             operation_fichier.AudioSegment, "from_file", return_value=fake_audio
         ):
             result = operation_fichier.extract_audio_fmp4(str(f))
-        assert result == "convertion.mp3"
+        # Output is now a unique tempfile path (SEC-F4 fix), not the legacy
+        # shared "convertion.mp3" sitting in the CWD.
+        assert result.endswith(".mp3")
+        assert "ortholyse_convert_" in result
+        import os
+        assert os.path.exists(result)
+        os.remove(result)
         fake_audio.export.assert_called_once()
 
 

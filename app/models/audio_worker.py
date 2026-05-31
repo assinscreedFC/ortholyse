@@ -1,8 +1,14 @@
+import logging
 import sys
 import os
 import json
+import tempfile
 from pydub import AudioSegment
 from pydub.silence import detect_silence
+
+from app.models.operation_fichier import _validate_audio_file
+
+logger = logging.getLogger(__name__)
 
 def find_ffmpeg():
     """Détecte le chemin de FFmpeg pour PyDub"""
@@ -19,8 +25,8 @@ AudioSegment.converter = find_ffmpeg()
 
 def file_size_ms(file_path):
     """Retourne la durée du fichier audio en millisecondes"""
-    format = os.path.splitext(file_path)[1].lstrip(".")
-    audio = AudioSegment.from_file(file_path, format=format)
+    fmt = _validate_audio_file(file_path)
+    audio = AudioSegment.from_file(file_path, format=fmt)
     return len(audio)
 
 def file_size_sec(file_path):
@@ -28,21 +34,21 @@ def file_size_sec(file_path):
     return file_size_ms(file_path) / 1000
 
 def extract_audio(file_path):
-    """Extrait l'audio d'un fichier MP4 et l'exporte en MP3"""
-    output_name = "conversion.mp3"
-    format = os.path.splitext(file_path)[1].lstrip(".")
-    audio = AudioSegment.from_file(file_path, format=format)
+    """Extrait l'audio d'un fichier MP4 et l'exporte en MP3 (unique tempfile)."""
+    fmt = _validate_audio_file(file_path)
+    fd, output_name = tempfile.mkstemp(prefix="ortholyse_convert_", suffix=".mp3")
+    os.close(fd)
+    audio = AudioSegment.from_file(file_path, format=fmt)
     audio.export(output_name, format="mp3")
     return output_name
 
 def split_audio(file_path):
-    """Découpe un fichier audio en plusieurs segments et les sauvegarde"""
-    output_dir = os.path.join(os.getcwd(), "fileSpliter")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    """Découpe un fichier audio en plusieurs segments dans un tempdir unique."""
+    output_dir = tempfile.mkdtemp(prefix="ortholyse_split_")
 
-    format = os.path.splitext(file_path)[1].lstrip(".")
-    audio = AudioSegment.from_file(file_path, format=format)
+    fmt = _validate_audio_file(file_path)
+    audio = AudioSegment.from_file(file_path, format=fmt)
+    format = fmt
     duration = file_size_ms(file_path)
     start = 0
     file_number = 0
