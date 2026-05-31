@@ -15,7 +15,7 @@ from PySide6.QtGui import (QFont,  QPixmap, QBrush, QShortcut, QAction, QKeyEven
 
 import re
 
-import app.config  # noqa: F401  (configures logging.basicConfig)
+from app.config import APP_ROOT  # also triggers logging.basicConfig
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class Feuille(QWidget):
         self.add_shortcut = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
         self.add_shortcut.activated.connect(self.add_enonce_pertinant)
 
-        self.font,self.font_family=self.controller.set_font('./assets/Fonts/Poppins/Poppins-Bold.ttf')
+        self.font,self.font_family=self.controller.set_font(str(APP_ROOT / 'assets' / 'Fonts' / 'Poppins' / 'Poppins-Bold.ttf'))
         self.inner_widget()
 
 
@@ -185,7 +185,7 @@ class Feuille(QWidget):
         label.setStyleSheet(f"color: {color_text}; border: none;")
         label.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed)
         label.setAlignment(Qt.AlignCenter)  # Centrage horizontal et vertical
-        self.font,self.font_family=self.controller.set_font('./assets/Fonts/Poppins/Poppins-Bold.ttf')
+        self.font,self.font_family=self.controller.set_font(str(APP_ROOT / 'assets' / 'Fonts' / 'Poppins' / 'Poppins-Bold.ttf'))
         self.font = QFont(self.font_family, 10)
 
         label.setFont(self.font)

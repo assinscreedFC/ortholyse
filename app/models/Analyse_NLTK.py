@@ -22,12 +22,22 @@ import app.config  # noqa: F401  (configures logging.basicConfig)
 
 logger = logging.getLogger(__name__)
 
-# Ouvrir le fichier JSON en mode lecture
-with open(os.path.abspath("./assets/JSON/suffixe.json"), 'r', encoding='utf-8') as fichier:
-    # Charger le contenu du fichier JSON
-    suffixes = json.load(fichier)
-with open(os.path.abspath("./assets/JSON/prefixe.json"), 'r', encoding='utf-8') as fichier:
-    prefixes = json.load(fichier)
+from app.config import APP_ROOT
+
+# Lazy-loaded asset cache (avoids module-level I/O which crashes if CWD != app/).
+_ASSETS_CACHE = {}
+
+
+def _load_assets():
+    """Load suffixe.json / prefixe.json once, lazily, resolved via APP_ROOT."""
+    if not _ASSETS_CACHE:
+        suffixe_path = APP_ROOT / "assets" / "JSON" / "suffixe.json"
+        prefixe_path = APP_ROOT / "assets" / "JSON" / "prefixe.json"
+        with open(suffixe_path, "r", encoding="utf-8") as fichier:
+            _ASSETS_CACHE["suffixes"] = json.load(fichier)
+        with open(prefixe_path, "r", encoding="utf-8") as fichier:
+            _ASSETS_CACHE["prefixes"] = json.load(fichier)
+    return _ASSETS_CACHE
 
 
 class Analyse_NLTK:
@@ -36,6 +46,10 @@ class Analyse_NLTK:
         self.__text = text
         self.nlp = spacy.load("fr_core_news_lg")
         self.doc = None
+        # Trigger lazy-loaded asset cache once on first instantiation.
+        assets = _load_assets()
+        self._suffixes = assets["suffixes"]
+        self._prefixes = assets["prefixes"]
 
     def __sub_punc(self, text=None):
         """
@@ -150,6 +164,8 @@ class Analyse_NLTK:
         words = set(words)
         word_dict = {}
         stemmer = SnowballStemmer("french")
+        suffixes = self._suffixes
+        prefixes = self._prefixes
         for word in words:
             word_dict[word] = {
                 "prefixe": False,

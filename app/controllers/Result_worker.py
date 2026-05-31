@@ -6,6 +6,8 @@
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 import traceback
 import json
+
+from app.config import APP_ROOT
 from app.controllers.Result_controllers import ResultController  # ← à adapter
 
 class WorkerSignals(QObject):
@@ -27,7 +29,8 @@ class ControllerLoaderWorker(QRunnable):
     @Slot()
     def run(self):
         try:
-            with open("./assets/JSON/settings.json", 'r', encoding='utf-8') as fichier:
+            settings_path = APP_ROOT / "assets" / "JSON" / "settings.json"
+            with open(settings_path, 'r', encoding='utf-8') as fichier:
                 # Charger le contenu du fichier JSON
                 parametres = json.load(fichier)
             controller = ResultController(

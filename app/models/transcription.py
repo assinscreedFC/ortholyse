@@ -5,7 +5,7 @@ import shutil
 import torch
 import json
 
-import app.config  # noqa: F401  (configures logging.basicConfig)
+from app.config import APP_ROOT  # also triggers logging.basicConfig
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +234,8 @@ def ajuster_mapping(ancien_text, nouveau_text, ancien_mapping):
 
 def get_model():
 
-    with open(os.path.abspath("./assets/JSON/settings.json"), 'r', encoding='utf-8') as fichier:
+    settings_path = APP_ROOT / "assets" / "JSON" / "settings.json"
+    with open(settings_path, 'r', encoding='utf-8') as fichier:
         settings = json.load(fichier)
     return settings["modelWhisper"]
 

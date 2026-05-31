@@ -14,9 +14,13 @@ from PySide6.QtWidgets import (
 )
 from app.Widgets.HoverSlider import HoverSlider
 
-import app.config  # noqa: F401  (configures logging.basicConfig)
+from app.config import APP_ROOT  # also triggers logging.basicConfig
 
 logger = logging.getLogger(__name__)
+
+_INTER_SEMIBOLD_FONT = str(
+    APP_ROOT / "assets" / "Fonts" / "Inter,Montserrat,Roboto" / "Inter" / "static" / "Inter_24pt-SemiBold.ttf"
+)
 
 
 class AudioPlayer(QWidget):
@@ -30,7 +34,7 @@ class AudioPlayer(QWidget):
 
         self.controller = NavigationController()
         self.font, self.font_family = self.set_font(
-            "./assets/Fonts/Inter,Montserrat,Roboto/Inter/static/Inter_24pt-SemiBold.ttf")
+            _INTER_SEMIBOLD_FONT)
         self.inner_widgets()
         self.init_player(self.path, play, current)
         # self.slots()

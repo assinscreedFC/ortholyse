@@ -6,9 +6,13 @@
 import os
 import json
 
+from app.config import APP_ROOT
+
+
 class SettingsController:
     def __init__(self):
-        self.chemin_fichier = "./assets/JSON/settings.json"
+        # Resolve via APP_ROOT so the path works regardless of CWD.
+        self.chemin_fichier = str(APP_ROOT / "assets" / "JSON" / "settings.json")
 
 
     def charger_parametres(self):
