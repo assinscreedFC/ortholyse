@@ -239,7 +239,7 @@ def get_model():
         settings = json.load(fichier)
     return settings["modelWhisper"]
 
-def transcription(file_path, ):
+def transcription(file_path: str) -> dict:
     # =============================================================================
     # Auteur  : GUIDJOU Danil
     # Email   : danil.guidjou@etu.u-paris.fr

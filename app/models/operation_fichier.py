@@ -36,32 +36,32 @@ def find_ffmpeg():
 
 AudioSegment.converter = find_ffmpeg()
 
-def file_size_Mo(file_path):
+def file_size_Mo(file_path: str) -> float:
     """Retourne la taille du fichier en Mo"""
     #getsize retourne la taille en octect 
     # 1Mo = 2^20 octet 
     return os.path.getsize(file_path) / pow(2, 20)
 
-def reel_file_format(file_path):
+def reel_file_format(file_path: str) -> str:
     """"
     Retourne le vrai format d'un fichier
     """
     return Path(file_path).suffix.lstrip(".")
 
 
-def file_size_ms(file_path):
+def file_size_ms(file_path: str) -> int:
     """Retroune le duree de l'audio en ms"""
     frmt = reel_file_format(file_path)
     return len(AudioSegment.from_file(file_path , format=frmt))
 
-def file_size_sec(file_path):
+def file_size_sec(file_path: str) -> float:
     """Retourne la duree de l'audio en seconde"""
     #on charge l'audio dans AudioSegment ...
     #puis on obtient la durée en ms -> / 1000 pour l'obtenir en sec
     frmt = reel_file_format(file_path)
     return ( len(AudioSegment.from_file(file_path , format=frmt)) / 1000)
 
-def extract_audio_fmp4(file_pth):
+def extract_audio_fmp4(file_pth: str) -> str:
     """"
     Extration d'un audio d'un fichier mp4
     je prends l'intiative de faire cette extration car un fichier mp3 est moins lourd qu'un fichier mp4 

@@ -15,7 +15,7 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 from fpdf import FPDF #type:ignore
 from docx import Document #type:ignore
 
-def exporte_json(chemin, data):
+def exporte_json(chemin: str, data: dict) -> None:
     """
     Exporte les données en format JSON.
     """
@@ -23,7 +23,7 @@ def exporte_json(chemin, data):
         json.dump(data, f, ensure_ascii=False, indent=4)
     #print(f"Données exportées en JSON : {chemin}")
 
-def exporte_txt(chemin, data):
+def exporte_txt(chemin: str, data: dict) -> None:
     """
     Exporte les données en format texte (.txt).
     Chaque clé-valeur sera écrite ligne par ligne.
@@ -33,7 +33,7 @@ def exporte_txt(chemin, data):
             f.write(f"{cle}: {valeur}\n")
     #print(f"Données exportées en TXT : {chemin}")
 
-def exporte_csv_column(chemin, data):
+def exporte_csv_column(chemin: str, data: dict) -> None:
     """
     Exporte les données en format CSV.
     Les clés du dictionnaire seront utilisées comme en-tête.
@@ -45,7 +45,7 @@ def exporte_csv_column(chemin, data):
             writer.writerow([cle, valeur])  # Chaque ligne correspond à clé-valeur
     #print(f"Données exportées en CSV : {chemin}")
 
-def exporte_csv_row(chemin, data):
+def exporte_csv_row(chemin: str, data: dict) -> None:
     """
     Exporte les données en format CSV sous forme de tableau.
     Les clés du dictionnaire sont utilisées comme en-têtes des colonnes.

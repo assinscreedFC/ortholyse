@@ -42,7 +42,7 @@ def _load_assets():
 
 class Analyse_NLTK:
 
-    def __init__(self, text=""):
+    def __init__(self, text: str = ""):
         self.__text = text
         self.nlp = spacy.load("fr_core_news_lg")
         self.doc = None
@@ -108,7 +108,7 @@ class Analyse_NLTK:
         # Reconstituer une chaîne à partir des tokens traités
         return " ".join(resultat)
 
-    def sent_size(self):
+    def sent_size(self) -> int:
         """
         retourne le nombre d'ennoncer
         """
@@ -125,12 +125,12 @@ class Analyse_NLTK:
         words = self.word_treatment()
         sents = self.sent_size()
         calc = len(words) / len(sents)
-        if type(calc) == int:
+        if isinstance(calc, int):
             return calc
         else:
             return round(calc, 2)
 
-    def nbr_unique_word(self):
+    def nbr_unique_word(self) -> int:
         """
             retourne le nombre de mot unique dans le texte ici on prend pas on compte si les mot font partie du meme radicale ou non
             avoir et avez sera compter comme deux mot different
@@ -220,7 +220,7 @@ class Analyse_NLTK:
         self.doc = doc
 
     def spacy_calc_morphem(self):
-        if (self.doc == None):
+        if self.doc is None:
             self.__token_spacy()
 
         count = []
@@ -239,8 +239,8 @@ class Analyse_NLTK:
         logger.debug("nltk morphem matches: %d", len(count))
         return count
 
-    def calc_lemme(self):
-        if (self.doc == None):
+    def calc_lemme(self) -> int:
+        if self.doc is None:
             self.__token_spacy()
         spacy_lemme = [token.lemma_ for token in self.doc]
 

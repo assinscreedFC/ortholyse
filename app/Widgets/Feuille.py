@@ -23,11 +23,10 @@ logger = logging.getLogger(__name__)
 
 class Feuille(QWidget):
 
-    #attribut de classe
-    enonce_history = []  # une liste pour avoi l'historique des ajout enonce pertinant
-
     def __init__(self,icone="./assets/SVG/icone_file_text.svg",text_top="Transcrire",left_button_text="Transcrire",right_butto_text="Coriger",bg_color="rgba(245, 245, 245, 0.85)",plain_text=""):
         super().__init__()
+        # Per-instance history (HIGH-7): never share mutable state across Feuille instances.
+        self.enonce_history = []
         self.icone=icone
         self.text_top=text_top
         self.left_button_text=left_button_text
@@ -287,7 +286,7 @@ class Feuille(QWidget):
                     to_remove = i
                     break
             if to_remove is not None:
-                Feuille.enonce_history.pop(to_remove)
+                self.enonce_history.pop(to_remove)
 
             Feuille.group_enonce_pertinant()
             return
@@ -308,7 +307,7 @@ class Feuille(QWidget):
                     to_remove = i
                     break
             if to_remove is not None:
-                Feuille.enonce_history.pop(to_remove)
+                self.enonce_history.pop(to_remove)
 
             self.group_enonce_pertinant()
             return
@@ -331,7 +330,7 @@ class Feuille(QWidget):
                 return  # chevauchement interdit
 
         # Sinon, on ajoute +...+ autour
-        Feuille.enonce_history.append((start, selected_text))  # pour undo
+        self.enonce_history.append((start, selected_text))  # pour undo
         cursor.insertText(f'+{selected_text}+')
 
         self.group_enonce_pertinant() # former un texte depuis les enonce pertinant
@@ -344,7 +343,7 @@ class Feuille(QWidget):
         if not self.enonce_history:
             return
 
-        start, original_text = Feuille.enonce_history.pop()
+        start, original_text = self.enonce_history.pop()
         cursor = self.text_edit.textCursor()
         cursor.setPosition(start)
         cursor.setPosition(start + len(original_text) + 2, QTextCursor.KeepAnchor)  # +2 pour les deux '+'
@@ -352,7 +351,7 @@ class Feuille(QWidget):
 
         if selected.startswith('+') and selected.endswith('+'):
             cursor.insertText(original_text)
-        if len(Feuille.enonce_history)==0:
+        if len(self.enonce_history)==0:
             self.bouton_enonce.hide()
 
         self.group_enonce_pertinant() #quand on sup un enonce on update le texte 
@@ -360,7 +359,7 @@ class Feuille(QWidget):
     def group_enonce_pertinant(self):
         """Groupe tout les enonce pertinant et les met dans la variable enonce_pertinant dans le controller"""
         # Trie par position
-        sorted_history = sorted(Feuille.enonce_history, key=lambda x: x[0])
+        sorted_history = sorted(self.enonce_history, key=lambda x: x[0])
 
         # **** Cette fonctionalite est utilise si dans une amelioration de l'app vous autoriser l'utilisateur a ajouter un enonce pertinant dont le debut/fin
         #           est a l'interieur d'un autre enonce pertinant
@@ -374,7 +373,7 @@ class Feuille(QWidget):
         texte = " ".join(entry[1].replace("+", "").strip() for entry in sorted_history).split()
         texte = " ".join(texte)
         self.controller.set_enonce_pertinant(texte)
-        if len(Feuille.enonce_history) != 0:
+        if len(self.enonce_history) != 0:
             self.bouton_enonce.show()
 
         # Never log patient text content (RGPD Art. 9). Length only.
