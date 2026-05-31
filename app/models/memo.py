@@ -3,11 +3,14 @@
 # Email   : danil.guidjou@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
 import threading
 import pyaudio
 import wave
 import sounddevice as sd
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from PySide6.QtCore import Signal, QObject
@@ -160,25 +163,26 @@ class Memo(QObject):
 
     def terminate(self,save):
         """Force la libération de toutes les ressources"""
+        sauvgarde_reussi = False
         try:
             if self.recording_event.is_set():
                 sauvgarde_reussi = self.stop(save=save)
         except Exception as e:
-            print(f"Erreur lors du terminate() : {e}")
+            logger.warning("terminate() failed: %s", e)
 
         if self.stream:
             try:
                 self.stream.stop_stream()
                 self.stream.close()
-            except:
-                pass
+            except Exception as e:
+                logger.warning("stream cleanup failed: %s", e)
             self.stream = None
 
         if self.audio:
             try:
                 self.audio.terminate()
-            except:
-                pass
+            except Exception as e:
+                logger.warning("audio terminate failed: %s", e)
             self.audio = None
 
         self.thread = None
