@@ -4,6 +4,7 @@
 # Version : 1.0
 # =============================================================================
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -11,16 +12,27 @@ from pydub import AudioSegment
 from pydub.silence import detect_silence
 
 def find_ffmpeg():
+    """Return a usable ffmpeg path.
+
+    Order:
+      1. PyInstaller bundle (frozen) -> _internal/ffmpeg.
+      2. Vendored binary at app/../bin/ffmpeg (legacy dev layout, optional).
+      3. System ffmpeg discovered via PATH (documented install path).
+      4. Fallback to the literal string "ffmpeg" so pydub uses PATH at call time.
+    """
     if getattr(sys, 'frozen', False):
-        # En mode bundle PyInstaller
         base_path = sys._MEIPASS
-        ffmpeg_path = os.path.abspath(os.path.join(base_path, '_internal' ,'ffmpeg'))
-        print(f"🛠️ Chemin ffmpeg (bundle) : {ffmpeg_path}")  # Debug du chemin
-    else:
-        # En mode dev
-        ffmpeg_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../bin', 'ffmpeg'))
-        print(f"🛠️ Chemin ffmpeg (dev) : {ffmpeg_path}")  # Debug du chemin
-    return ffmpeg_path
+        return os.path.abspath(os.path.join(base_path, '_internal', 'ffmpeg'))
+
+    vendored = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin', 'ffmpeg'))
+    if os.path.isfile(vendored):
+        return vendored
+
+    system = shutil.which('ffmpeg')
+    if system:
+        return system
+
+    return 'ffmpeg'
 
 AudioSegment.converter = find_ffmpeg()
 
