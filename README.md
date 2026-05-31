@@ -2,15 +2,15 @@
 
 # Ortholyse
 
-Desktop app for speech-language pathologists. Automates audio transcription and computes syntactic complexity metrics on patient speech samples.
+Desktop app for speech-language pathologists. It transcribes session audio with Whisper and computes syntactic metrics on the corrected transcript, locally.
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-Qt6-41cd52?style=flat-square&logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
-[![CI](https://img.shields.io/badge/CI-pytest%20%2B%20coverage-success?style=flat-square)](.github/workflows/)
-[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen?style=flat-square)](.github/workflows/)
+[![CI](https://img.shields.io/badge/CI-pytest%20%2B%20coverage-success?style=flat-square)](.github/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen?style=flat-square)](.github/workflows/ci.yml)
 
-> Built for clinicians who lose hours transcribing sessions by hand. Ortholyse turns a recording into a structured analysis you can correct, validate and export in minutes.
+> Built for clinicians who lose hours transcribing sessions by hand. Ortholyse turns a recording into a structured analysis you can correct, validate and export.
 
 ## Table of Contents
 
@@ -40,8 +40,8 @@ Ortholyse runs the recording through Whisper for transcription, lets you correct
 
 **Built for:**
 
-- Speech-language pathologists (orthophonistes) in private practice or in hospital settings
-- French-speaking clinical environments (the NLP pipeline is tuned for French; English support is planned)
+- Speech-language pathologists in private practice or in hospital settings
+- French-speaking clinical environments (the NLP pipeline is tuned for French, English support is planned)
 - Researchers comparing speech samples across patient cohorts
 
 ## Features
@@ -56,7 +56,7 @@ Ortholyse runs the recording through Whisper for transcription, lets you correct
 
 ## Screenshots
 
-Screenshots will be added in a future release. The app exposes three main views (Recording, Import, Analysis) accessible from a left sidebar.
+Screenshots will be added in a future release. The app exposes a sidebar with the main views (Home, Recording, Import, Transcription correction, Analysis, Settings).
 
 ## Architecture
 
@@ -78,18 +78,23 @@ Screenshots will be added in a future release. The app exposes three main views 
                                                     +-------------------+
 ```
 
-The codebase is split into:
+The codebase follows a Views / Controllers / Models split:
 
-- `app/` Qt UI screens and widgets
-- `app/feuille/` linguistic analysis modules (Analyse_NLTK, MLU, morpheme counters)
-- `app/exportation/` PDF generation
-- `app/operation_fichier/` file IO and session storage
-- `app/transcription/` Whisper wrappers
+- `app/Views/` Qt screens (Home, Recording, Import, Transcription, Metrique, Settings)
+- `app/Widgets/` reusable Qt widgets (AudioPlayer, AudioBar, Feuille)
+- `app/controllers/` controller layer wiring views to models
+- `app/models/` business logic and IO:
+  - `Analyse_NLTK.py` linguistic analysis (MLU, morphemes, Spacy + NLTK pipeline)
+  - `exportation.py` PDF and JSON export
+  - `operation_fichier.py` audio file IO and silence detection
+  - `transcription.py` Whisper wrappers
+  - `audio_worker.py`, `memo.py` recording and live capture
+- `app/assets/` fonts, icons, JSON resources (suffixes, prefixes, settings)
 
 ## Prerequisites
 
 - Python 3.12 or higher
-- FFmpeg installed and on `PATH` (Whisper and pydub require it for audio decoding)
+- FFmpeg available to the app (the code expects a binary under `bin/ffmpeg` relative to `app/`; on a dev machine the simplest path is to install FFmpeg system-wide and adjust `find_ffmpeg()` in `app/models/operation_fichier.py` if needed)
 - About 4 GB of free disk for the Whisper and Spacy models
 - A working microphone if you plan to record sessions in app
 
@@ -116,26 +121,23 @@ The codebase is split into:
    pip install -r requirements.txt
    ```
 
-   This step downloads several hundred megabytes of model weights, so plan accordingly.
+   This installs PySide6, Whisper, torch, Spacy and the French Spacy models (`fr_core_news_lg`, `fr_core_news_sm`) which are pinned as wheel URLs in `requirements.txt`. Plan for several hundred megabytes of downloads.
 
-4. Download the French Spacy models:
-
-   ```bash
-   python -m spacy download fr_core_news_lg
-   python -m spacy download fr_core_news_sm
-   ```
-
-5. Download the required NLTK data:
+4. Download the NLTK data used at runtime:
 
    ```bash
-   python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
+   python -c "import nltk; nltk.download('punkt_tab')"
    ```
 
-   If a runtime error mentions a missing NLTK resource, run the same command for the specific resource named in the trace.
+   If a runtime error mentions another NLTK resource, run the same command with the resource named in the trace.
 
 ## Configuration
 
-Ortholyse runs entirely offline and stores its data under `data/` inside the project folder. There are no API keys to set. Whisper model size can be tweaked in `app/transcription/` by changing the default model name (`base`, `small`, `medium`, `large`). Smaller models are faster but less accurate.
+Ortholyse runs entirely offline. There are no API keys.
+
+The Whisper model used by the app is read from `app/assets/JSON/settings.json` (`modelWhisper` key, indexing into `["base", "small", "medium", "turbo"]`). Smaller models are faster, larger ones are more accurate. The Settings view lets you switch from inside the app.
+
+Linguistic resources (prefix and suffix lists) live alongside settings in `app/assets/JSON/`.
 
 ## Quickstart
 
@@ -145,7 +147,7 @@ From the project root, with the virtual environment active:
 python app/main.py
 ```
 
-The app window opens on the Recording view. Pick an audio file via Import, or record a fresh session, then run the analysis.
+The app window opens on Home. Pick an audio file via Import, or record a fresh session, then run the analysis.
 
 ## Usage
 
@@ -159,42 +161,44 @@ The typical session flow:
 
 ## Development
 
+Tests run on a minimal dependency set (UI, Whisper and Spacy are mocked in `tests/conftest.py`):
+
 ```bash
-# Install dev dependencies (pytest, pytest-cov, ruff)
-pip install -r requirements-dev.txt
+# Install test dependencies (pytest, pytest-cov, pytest-mock, nltk, num2words, fpdf2, python-docx)
+pip install -r requirements-test.txt
 
-# Run the linter
-ruff check app tests
+# Download the NLTK data the tests rely on
+python -m nltk.downloader -q punkt punkt_tab
 
-# Run the test suite
+# Run the test suite (coverage is enforced via pyproject.toml)
 pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=term-missing
 ```
 
-UI code (PySide6 widgets) and ML wrappers (Whisper, Spacy) are excluded from the coverage gate, since they require a display server and large models to exercise meaningfully. The business modules under `app/feuille/`, `app/exportation/` and `app/operation_fichier/` are covered at 80 percent or more.
+`pyproject.toml` carries the pytest and coverage config, including a `--cov-fail-under=80` gate and the omit list for UI, controllers, and ML wrappers that need a display server, audio hardware or the actual Whisper model to run.
+
+The same flow runs on every push and PR through `.github/workflows/ci.yml`.
 
 ## Tests and coverage
 
-CI runs on every push and pull request to `main` via GitHub Actions:
+CI runs on every push and pull request to `main`:
 
-- Lint with ruff
-- pytest with coverage on business modules
-- Fails the build if coverage drops below 80 percent on the gated modules
+- `pytest` with coverage on the business modules (`app/models/Analyse_NLTK.py`, `exportation.py`, `operation_fichier.py`)
+- Build fails if coverage drops below 80 percent on the gated modules
+- Current coverage on those modules is 81 percent (see `coverage.xml`)
 
-See `.github/workflows/` for the exact pipeline.
+UI widgets, Qt views, controllers, and the Whisper / audio wrappers are excluded from the gate because they need a display server, audio hardware or the real ML model to exercise meaningfully.
 
 ## Roadmap
 
-- English language support (Spacy `en_core_web_lg`, English NLTK corpora)
+- English language support (Spacy `en_core_web_lg`, English NLTK corpora; the English Spacy wheel is already pinned in `requirements.txt`)
+- Configurable Whisper model and FFmpeg path from the Settings view, without editing source
 - Batch processing of multiple sessions
 - Configurable report templates
 - Side-by-side comparison view across patient sessions
 
 ## Contributing
 
-Issues and pull requests are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) (or [CONTRIBUTING.fr.md](./CONTRIBUTING.fr.md) in French) before opening a PR. Work is tracked via GitHub issues; please open one to discuss larger changes before coding.
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) (or [CONTRIBUTING.fr.md](./CONTRIBUTING.fr.md) in French) before opening a PR. Work is tracked via GitHub issues, open one to discuss larger changes before coding.
 
 ## License
 

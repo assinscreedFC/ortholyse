@@ -2,15 +2,15 @@
 
 # Ortholyse
 
-Application desktop pour orthophonistes. Automatise la transcription audio et calcule des métriques de complexité syntaxique sur des échantillons de parole patient.
+Application desktop pour orthophonistes. Elle transcrit l'audio des séances avec Whisper et calcule des métriques syntaxiques sur le texte corrigé, en local.
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776ab?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-Qt6-41cd52?style=flat-square&logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
 [![Licence: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
-[![CI](https://img.shields.io/badge/CI-pytest%20%2B%20coverage-success?style=flat-square)](.github/workflows/)
-[![Couverture](https://img.shields.io/badge/coverage-80%25%2B-brightgreen?style=flat-square)](.github/workflows/)
+[![CI](https://img.shields.io/badge/CI-pytest%20%2B%20coverage-success?style=flat-square)](.github/workflows/ci.yml)
+[![Couverture](https://img.shields.io/badge/coverage-80%25%2B-brightgreen?style=flat-square)](.github/workflows/ci.yml)
 
-> Conçu pour les clinicien-ne-s qui perdent des heures à transcrire des séances à la main. Ortholyse transforme un enregistrement en analyse structurée que vous pouvez corriger, valider et exporter en quelques minutes.
+> Conçu pour les clinicien-ne-s qui perdent des heures à transcrire des séances à la main. Ortholyse transforme un enregistrement en analyse structurée que vous pouvez corriger, valider et exporter.
 
 ## Table des matières
 
@@ -36,12 +36,12 @@ Application desktop pour orthophonistes. Automatise la transcription audio et ca
 
 Les orthophonistes transcrivent régulièrement des séances patient pour calculer des métriques comme la longueur moyenne d'énoncé (LME), le nombre de morphèmes ou la complexité syntaxique. Le faire à la main sur une séance de 20 minutes peut prendre une heure complète, et les calculs sont sources d'erreurs.
 
-Ortholyse fait passer l'enregistrement par Whisper pour la transcription, vous laisse corriger le texte avec une lecture synchronisée, puis calcule les métriques linguistiques avec Spacy et NLTK. Tout tourne en local sur la machine du praticien. Aucun upload cloud, aucune donnée patient ne quitte le bureau.
+Ortholyse fait passer l'enregistrement par Whisper pour la transcription, vous laisse corriger le texte avec une lecture synchronisée, puis calcule les métriques linguistiques avec Spacy et NLTK. Tout tourne en local sur la machine du praticien. Aucun envoi cloud, aucune donnée patient ne quitte le bureau.
 
 **Pour qui :**
 
 - Orthophonistes en cabinet libéral ou en milieu hospitalier
-- Environnements cliniques francophones (le pipeline NLP est calibré pour le français ; support anglais prévu)
+- Environnements cliniques francophones (le pipeline NLP est calibré pour le français, support anglais prévu)
 - Chercheur-euse-s comparant des échantillons de parole entre cohortes de patients
 
 ## Fonctionnalités
@@ -56,7 +56,7 @@ Ortholyse fait passer l'enregistrement par Whisper pour la transcription, vous l
 
 ## Captures
 
-Les captures seront ajoutées dans une prochaine version. L'application présente trois vues principales (Enregistrement, Import, Analyse), accessibles depuis une barre latérale gauche.
+Les captures seront ajoutées dans une prochaine version. L'application présente une barre latérale avec les vues principales (Accueil, Enregistrement, Import, Correction de transcription, Analyse, Paramètres).
 
 ## Architecture
 
@@ -78,18 +78,23 @@ Les captures seront ajoutées dans une prochaine version. L'application présent
                                                     +-------------------+
 ```
 
-Le code est découpé en :
+Le code suit une séparation Vues / Contrôleurs / Modèles :
 
-- `app/` écrans et widgets Qt
-- `app/feuille/` modules d'analyse linguistique (Analyse_NLTK, LME, compteurs de morphèmes)
-- `app/exportation/` génération PDF
-- `app/operation_fichier/` IO fichiers et stockage de séances
-- `app/transcription/` wrappers Whisper
+- `app/Views/` écrans Qt (Accueil, Enregistrement, Import, Transcription, Metrique, Paramètres)
+- `app/Widgets/` widgets Qt réutilisables (AudioPlayer, AudioBar, Feuille)
+- `app/controllers/` couche contrôleurs qui relie vues et modèles
+- `app/models/` logique métier et IO :
+  - `Analyse_NLTK.py` analyse linguistique (LME, morphèmes, pipeline Spacy + NLTK)
+  - `exportation.py` export PDF et JSON
+  - `operation_fichier.py` IO fichiers audio et détection de silence
+  - `transcription.py` wrappers Whisper
+  - `audio_worker.py`, `memo.py` enregistrement et capture live
+- `app/assets/` polices, icônes, ressources JSON (suffixes, préfixes, settings)
 
 ## Prérequis
 
 - Python 3.12 ou plus récent
-- FFmpeg installé et présent dans le `PATH` (requis par Whisper et pydub pour décoder l'audio)
+- FFmpeg accessible à l'app (le code attend un binaire sous `bin/ffmpeg` relatif à `app/` ; sur un poste de dev, le plus simple est d'installer FFmpeg au niveau système et d'ajuster `find_ffmpeg()` dans `app/models/operation_fichier.py` si besoin)
 - Environ 4 Go d'espace disque libre pour les modèles Whisper et Spacy
 - Un micro fonctionnel si vous souhaitez enregistrer des séances dans l'app
 
@@ -116,26 +121,23 @@ Le code est découpé en :
    pip install -r requirements.txt
    ```
 
-   Cette étape télécharge plusieurs centaines de Mo de poids de modèles, prévoir le temps nécessaire.
+   Cette étape installe PySide6, Whisper, torch, Spacy et les modèles Spacy français (`fr_core_news_lg`, `fr_core_news_sm`) qui sont épinglés comme URLs de wheels dans `requirements.txt`. Prévoir plusieurs centaines de Mo de téléchargements.
 
-4. Télécharger les modèles Spacy français :
-
-   ```bash
-   python -m spacy download fr_core_news_lg
-   python -m spacy download fr_core_news_sm
-   ```
-
-5. Télécharger les données NLTK requises :
+4. Télécharger les données NLTK utilisées au runtime :
 
    ```bash
-   python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
+   python -c "import nltk; nltk.download('punkt_tab')"
    ```
 
-   Si une erreur runtime mentionne une ressource NLTK manquante, relancer la même commande avec le nom exact donné dans la trace.
+   Si une erreur runtime mentionne une autre ressource NLTK, relancer la même commande avec le nom donné dans la trace.
 
 ## Configuration
 
-Ortholyse tourne entièrement hors ligne et stocke ses données sous `data/` dans le dossier projet. Aucune clé API à renseigner. La taille du modèle Whisper peut être ajustée dans `app/transcription/` en changeant le nom de modèle par défaut (`base`, `small`, `medium`, `large`). Les modèles plus petits sont plus rapides mais moins précis.
+Ortholyse tourne entièrement hors ligne. Aucune clé API à renseigner.
+
+Le modèle Whisper utilisé par l'app est lu depuis `app/assets/JSON/settings.json` (clé `modelWhisper`, indexe dans `["base", "small", "medium", "turbo"]`). Les modèles plus petits sont plus rapides, les plus gros plus précis. La vue Paramètres permet de basculer depuis l'app.
+
+Les ressources linguistiques (listes de préfixes et suffixes) vivent à côté des settings dans `app/assets/JSON/`.
 
 ## Démarrage rapide
 
@@ -145,7 +147,7 @@ Depuis la racine du projet, avec l'environnement virtuel actif :
 python app/main.py
 ```
 
-La fenêtre s'ouvre sur la vue Enregistrement. Choisir un fichier audio via Import, ou enregistrer une nouvelle séance, puis lancer l'analyse.
+La fenêtre s'ouvre sur l'Accueil. Choisir un fichier audio via Import, ou enregistrer une nouvelle séance, puis lancer l'analyse.
 
 ## Utilisation
 
@@ -159,42 +161,44 @@ Flux d'une séance type :
 
 ## Développement
 
+Les tests tournent sur un jeu minimal de dépendances (UI, Whisper et Spacy sont mockés dans `tests/conftest.py`) :
+
 ```bash
-# Installer les dépendances dev (pytest, pytest-cov, ruff)
-pip install -r requirements-dev.txt
+# Installer les dépendances de test (pytest, pytest-cov, pytest-mock, nltk, num2words, fpdf2, python-docx)
+pip install -r requirements-test.txt
 
-# Lancer le linter
-ruff check app tests
+# Télécharger les données NLTK utilisées par les tests
+python -m nltk.downloader -q punkt punkt_tab
 
-# Lancer la suite de tests
+# Lancer la suite (la couverture est appliquée via pyproject.toml)
 pytest
-
-# Lancer avec couverture
-pytest --cov=app --cov-report=term-missing
 ```
 
-Le code UI (widgets PySide6) et les wrappers ML (Whisper, Spacy) sont exclus du gate de couverture, parce qu'ils nécessitent un serveur d'affichage et de gros modèles pour être exercés correctement. Les modules métier sous `app/feuille/`, `app/exportation/` et `app/operation_fichier/` sont couverts à 80 % ou plus.
+`pyproject.toml` porte la config pytest et coverage, dont le gate `--cov-fail-under=80` et la liste `omit` pour l'UI, les contrôleurs et les wrappers ML qui ont besoin d'un serveur d'affichage, de matériel audio ou du vrai modèle Whisper pour tourner.
+
+Le même flux tourne à chaque push et PR via `.github/workflows/ci.yml`.
 
 ## Tests et couverture
 
-La CI tourne à chaque push et pull request sur `main` via GitHub Actions :
+La CI tourne à chaque push et pull request sur `main` :
 
-- Lint avec ruff
-- pytest avec couverture sur les modules métier
+- `pytest` avec couverture sur les modules métier (`app/models/Analyse_NLTK.py`, `exportation.py`, `operation_fichier.py`)
 - Échec du build si la couverture descend sous 80 % sur les modules gatés
+- Couverture actuelle sur ces modules : 81 % (voir `coverage.xml`)
 
-Voir `.github/workflows/` pour le pipeline exact.
+Les widgets UI, les vues Qt, les contrôleurs et les wrappers Whisper / audio sont exclus du gate parce qu'ils nécessitent un serveur d'affichage, du matériel audio ou le vrai modèle ML pour être exercés correctement.
 
 ## Feuille de route
 
-- Support de l'anglais (Spacy `en_core_web_lg`, corpus NLTK anglais)
+- Support de l'anglais (Spacy `en_core_web_lg`, corpus NLTK anglais ; le wheel Spacy anglais est déjà épinglé dans `requirements.txt`)
+- Modèle Whisper et chemin FFmpeg configurables depuis la vue Paramètres, sans toucher au code
 - Traitement batch de plusieurs séances
 - Templates de rapport configurables
 - Vue de comparaison côte à côte entre séances patient
 
 ## Contribuer
 
-Issues et pull requests bienvenues. Merci de lire [CONTRIBUTING.fr.md](./CONTRIBUTING.fr.md) (ou [CONTRIBUTING.md](./CONTRIBUTING.md) en anglais) avant d'ouvrir une PR. Le travail est suivi via les issues GitHub ; ouvrir une issue pour discuter des changements importants avant de coder.
+Issues et pull requests bienvenues. Merci de lire [CONTRIBUTING.fr.md](./CONTRIBUTING.fr.md) (ou [CONTRIBUTING.md](./CONTRIBUTING.md) en anglais) avant d'ouvrir une PR. Le travail est suivi via les issues GitHub, ouvrir une issue pour discuter des changements importants avant de coder.
 
 ## Licence
 
