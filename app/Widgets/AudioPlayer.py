@@ -3,6 +3,8 @@
 # Email   : anis.hammouche@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 from PySide6.QtCore import QUrl, Qt, Signal, QTimer
 from PySide6.QtGui import QFontDatabase, QFont, QIcon
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
@@ -11,6 +13,10 @@ from PySide6.QtWidgets import (
      QPushButton, QSizePolicy, QLabel, QMenu
 )
 from app.Widgets.HoverSlider import HoverSlider
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 
 class AudioPlayer(QWidget):
@@ -103,7 +109,7 @@ class AudioPlayer(QWidget):
     def check(self):
         if self.controller.get_play_pause():
             self.toggle_play_pause()
-            print("ixi", self.controller.get_audio_player())
+            logger.debug("toggled play/pause via check()")
 
     def toggle_play_pause(self):
         if not self.is_playing:
@@ -157,13 +163,13 @@ class AudioPlayer(QWidget):
         """
         Retourne la position actuelle du fichier audio en secondes.
         """
-        print(self.player.position())
+        logger.debug("player position: %s", self.player.position())
         return self.player.position()
 
     def set_font(self, font_path):
         font_id = QFontDatabase.addApplicationFont(font_path)
         if font_id == -1:
-            print("Erreur de chargement de police")
+            logger.warning("Erreur de chargement de police: %s", font_path)
             return QFont(), ""
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         return QFont(font_family, 24), font_family

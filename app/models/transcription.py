@@ -1,8 +1,14 @@
+import logging
 import whisper
 import os
 import shutil
 import torch
 import json
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
+
 from app.models.operation_fichier import (
     extract_audio_fmp4,
     file_size_Mo,
@@ -291,8 +297,8 @@ def transcription(file_path, ):
                 "text": seg["text"].strip(),
                 "word_timestamps": seg.get("words", [])
             })
-    print(results)
-    print(combined_segments)
+    logger.debug("whisper produced %d transcription result(s)", len(results))
+    logger.debug("combined %d segment(s) for mapping", len(combined_segments))
     # Obtenir le texte complet et le mapping des mots
     texte_global, mapping_data = extraire_mapping_depuis_segments(combined_segments)
 
@@ -304,6 +310,5 @@ def transcription(file_path, ):
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-   # result = transcription("D:/disc E/vscode pyhton/python/upc projet test/audio.wav", 3)
-  #  print(json.dumps(result, ensure_ascii=False, indent=4))
-  print(custom_tokenize("bonjour je m'appelle anis. j'ai 25 ans"))
+    # Demo CLI: tokenisation only (no patient audio dumped to stdout).
+    logger.info("demo tokens: %s", custom_tokenize("bonjour je m'appelle anis. j'ai 25 ans"))

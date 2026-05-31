@@ -5,6 +5,8 @@
 # Email   : anis.hammouche@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 import nltk.tokenize as to  # type:ignore
 from num2words import num2words
 from nltk.stem.snowball import SnowballStemmer  # type:ignore
@@ -15,6 +17,10 @@ import spacy
 import re
 import json
 import os
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 # Ouvrir le fichier JSON en mode lecture
 with open(os.path.abspath("./assets/JSON/suffixe.json"), 'r', encoding='utf-8') as fichier:
@@ -96,8 +102,8 @@ class Analyse_NLTK:
 
         sentences = to.sent_tokenize(self.__text)
 
-        # Nombre d'énoncés (phrases)
-        print("ennoncer= ", sentences)
+        # Nombre d'énoncés (phrases) — never log the patient text itself (RGPD Art. 9).
+        logger.debug("tokenised %d sentence(s)", len(sentences))
         return len(sentences)
 
     def mlcu(self):
@@ -118,7 +124,7 @@ class Analyse_NLTK:
             !!! pour que avoir et avez sois compter comme un seul mot je doit voir avec les autres
         """
         words = set(self.word_treatment())
-        print(len(words))
+        logger.debug("unique words: %d", len(words))
         return len(words)
 
     def __sub_morph(self, text=None):
@@ -206,23 +212,15 @@ class Analyse_NLTK:
             if (token.prefix_ != "" or token.suffix_ != ""):
                 if (token.prefix_ + token.suffix_ != token.text) and (token.prefix_ != token.text) and (
                         token.suffix_ != token.text):
-                    print(f"Mot: {token.text}")
-                    print(f"  - Lemme: {token.lemma_}")  # Lemme (forme de base)
-                    print(f"  - Préfixe: {token.prefix_}")  # Préfixe
-                    print(f"  - Suffixe: {token.suffix_}")  # Suffixe
-                    print(f"  - Morphemes: {token.morph}")  # Informations morphologiques détaillées
-                    print(f"  - POS: {token.pos_}")  # Part of speech (partie du discours)
-                    print("-" * 50)
                     count.append(
                         f"{token.text} : {token.lemma_} {token.prefix_} {token.suffix_} {token.morph} {token.pos_}")
-        print(len(count))
+        logger.debug("spacy morphem matches: %d", len(count))
         count = []
         word_dict = self.morphem()
         for word, morphemes in word_dict.items():
             if morphemes["prefixe"] or morphemes["suffixe"] or morphemes["infixe"]:
                 count.append(f"{word} : {morphemes}")
-                print(f"{word} : {morphemes}")
-        print(len(count))
+        logger.debug("nltk morphem matches: %d", len(count))
         return count
 
     def calc_lemme(self):

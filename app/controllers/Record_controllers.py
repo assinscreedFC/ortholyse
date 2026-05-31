@@ -3,7 +3,14 @@
 # Email   : danil.guidjou@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 from app.models.memo import Memo
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
+
 
 class RecordeController:
     """Controllers pour relier les pages d'enregistrement a l'enregistreur (Memo) """
@@ -22,13 +29,13 @@ class RecordeController:
         return self.recorder.terminate(save=sv)
 
     def pause(self, widget):
-        print("pause")
+        logger.debug("recording paused")
         self.recorder.volume_level.disconnect(widget.update_volume)
         widget.set_pause_state(True)  # ← Stop animation + timer
         self.recorder.pause_recording()
 
     def retour_pause(self, widget):
-        print("retour")
+        logger.debug("recording resumed")
         self.recorder.volume_level.connect(widget.update_volume)
         widget.set_pause_state(False)  # ← Reprend animation + timer
         self.recorder.resume_recording()

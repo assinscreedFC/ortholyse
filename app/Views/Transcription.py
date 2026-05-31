@@ -6,11 +6,17 @@
 
 
 
+import logging
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QSizePolicy, QHBoxLayout
 
 from app.Widgets.AudioPlayer import AudioPlayer
 from app.Widgets.Feuille import Feuille
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 
 class Transcription(QWidget):
@@ -84,7 +90,7 @@ class Transcription(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        print("Nouvelle taille de Feuille :", self.width(), self.height())
+        logger.debug("Feuille resize: %sx%s", self.width(), self.height())
         self.test(event)
 
     def hideEvent(self, event):

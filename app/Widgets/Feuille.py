@@ -3,6 +3,8 @@
 # Email   : anis.hammouche@etu.u-paris.fr & danil.guidjou@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 from PySide6.QtWidgets import (
      QWidget, QVBoxLayout, QHBoxLayout,
      QPushButton, QSizePolicy, QLabel, QPlainTextEdit,
@@ -12,6 +14,10 @@ from PySide6.QtGui import (QFont,  QPixmap, QBrush, QShortcut, QAction, QKeyEven
                            QKeySequence, QTextCursor, QSyntaxHighlighter, QTextCharFormat, QColor)
 
 import re
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -371,7 +377,8 @@ class Feuille(QWidget):
         if len(Feuille.enonce_history) != 0:
             self.bouton_enonce.show()
 
-        print(texte)
+        # Never log patient text content (RGPD Art. 9). Length only.
+        logger.debug("enonce pertinant updated (%d chars)", len(texte))
 
     def delete_all_enonce_pertinant(self):
         """Supprime tout les enonces pertinant"""

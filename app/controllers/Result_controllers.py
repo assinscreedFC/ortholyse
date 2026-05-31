@@ -3,11 +3,17 @@
 # Email   : danil.guidjou@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 from app.models.Analyse_NLTK import Analyse_NLTK
 from app.models.operation_fichier import file_size_sec
 from app.models.exportation import exporte_docx, exporte_pdf, exporte_json, exporte_csv_column, exporte_txt
 
 import json
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 # Ouvrir le fichier settings en mode lecture
 # with open("./assets/JSON/settings.json", 'r', encoding='utf-8') as fichier:
@@ -68,7 +74,7 @@ class ResultController:
         resultat = self.resultat.sent_size()
         pourcentage = int((resultat * 50) // (self.reultat_dic["Nombre Enonce"] * self.multiplicateur))
         self.data["Nombre Enonce"] = resultat
-        print("resultat = ", resultat)
+        logger.debug("nombre enonce: %s", resultat)
         return [resultat, pourcentage]
 
     def get_morpheme_enonce(self):

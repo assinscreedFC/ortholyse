@@ -3,9 +3,15 @@
 # Email   : anis.hammouche@etu.u-paris.fr
 # Version : 1.0
 # =============================================================================
+import logging
+
 from PySide6.QtCore import QObject, Signal, QRunnable
 
 from app.models.transcription import transcription
+
+import app.config  # noqa: F401  (configures logging.basicConfig)
+
+logger = logging.getLogger(__name__)
 
 class WorkerSignals(QObject):
     fin = Signal()  # Signal émis à la fin du traitement
@@ -37,6 +43,6 @@ class TranscriptionRunnable(QRunnable):
         self.controller.set_first_mapping(result["mapping"])
         # Remet le curseur à son état normal une fois le traitement terminé
         #self.controller.central_widget.setCursor(Qt.ArrowCursor) !!! il ne faut pas manip qt dans un thread secondaire
-        print("transcription finished")
+        logger.info("transcription finished")
 
         self.signals.fin.emit() # !!! envoie d'un signal de fin pour prevenir la fin du traitement 
