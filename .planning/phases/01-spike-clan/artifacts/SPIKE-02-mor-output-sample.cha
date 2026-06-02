@@ -1,0 +1,17 @@
+@Begin
+@Languages:	fra
+@Participants:	CHI Enfant
+@ID:	fra|test|CHI|2;06.|||Target_Child|||
+*CHI:	le chat mange la souris .
+%mor:	pro:obj|le^det:art|le&m&sg n|chat&m
+	v|manger-IMP&2s^v|manger-PRES&SUB&13s
+	pro:obj|la^det:art|la&f&sg^co|la
+	v|sourire&PRES&12s^v|sourire&PASS&12s^v|sourire&IMP&2s^part|sourire&PP&m&pl^n|souris&f
+	.
+*CHI:	il veut un gateau .
+%mor:	pro:sub|il v:mdllex|vouloir&PRES&3s^v:mdl|vouloir&PRES&3s
+	pro|un&m&sg^det:art|un&m&sg ?|gateau .
+*CHI:	maman donne le ballon .
+%mor:	n|maman&f v|donner-IMP&2s^v|donner-PRES&SUB&13s
+	pro:obj|le^det:art|le&m&sg n|ballon&m .
+@End

@@ -138,9 +138,9 @@ SKIPPED [1] Binaire 'mor' absent du PATH — test sauté en CI
 
 ## Verdict
 
-**Go conditionnel sur la voie CLAN** (verdict révisé après compilation native réussie — voir `artifacts/BUILD-MOR-WINDOWS.md`)
+**GO sur la voie CLAN — validé de bout en bout** (un vrai tier `%mor` a été produit par `mor` headless sur Windows ; voir `artifacts/BUILD-MOR-WINDOWS.md` + `artifacts/SPIKE-02-mor-output-sample.cha`)
 
-> **Correction d'un verdict intermédiaire prématuré.** Une première rédaction concluait « No-Go CLAN / pivot pure-Python ». Cette conclusion était fausse : elle reposait sur l'échec du build MinGW *out-of-the-box*, sans tenir compte du fait que la source unix-clan est **ouverte (GPL) et modifiable**. Après portage, un `mor.exe` headless natif Windows a été compilé et exécuté avec succès.
+> **Trajectoire du verdict.** Une rédaction intermédiaire concluait « No-Go CLAN / pivot pure-Python » — faux, car la source unix-clan est **ouverte (GPL) et modifiable**. Après portage (compilation MSYS + shim sgtty + entrée via stdin), `mor` produit un `%mor` français correct sur Windows. Le moteur CLAN/MOR — cœur de valeur du produit — est confirmé viable et embarquable.
 
 Synthèse des trois SPIKE :
 
@@ -149,7 +149,7 @@ Synthèse des trois SPIKE :
 | SPIKE-01 — Licence binaire WinCLAN | BSD-3 (GUI only — non utilisé pour le moteur) | **GO** |
 | SPIKE-01 — Licence moteur headless (unix-clan) | **GPL**, source ouverte/modifiable ; subprocess = agrégation (précédent FFmpeg déjà embarqué) | **GO** (compatible MIT/commercial) |
 | SPIKE-01 — Licence grammaire MOR FR | Non documentée, confirmation TalkBank en attente | **EN ATTENTE** |
-| SPIKE-02 — `mor` headless Windows | **Compilé + exécuté** ; charge grammaire FR + 41 813 entrées lexique + a/c-rules. Reste 1 bug de lecture `.cha` (0xEF parasite) avant production `%mor` | **FAISABLE** (90 %, bug borné restant) |
+| SPIKE-02 — `mor` headless Windows | **VALIDÉ de bout en bout** : `mor` compilé natif (build MSYS), charge grammaire FR + 41 813 entrées lexique, **produit un tier `%mor` correct** (entrée via stdin). Preuve : `artifacts/SPIKE-02-mor-output-sample.cha` | **GO** |
 | SPIKE-03 — Parsing + MLU morphèmes | 2.667 calculé, plage normative [2.52, 3.52], 12 tests verts | **GO** |
 
 **Conclusion D-07 :** La voie **« embarquer CLAN headless sur Windows » est FAISABLE**, et non un No-Go :
@@ -158,14 +158,19 @@ Synthèse des trois SPIKE :
 - GPL appelé en subprocess = simple agrégation, modèle identique à FFmpeg **déjà embarqué** dans Ortholyse → compatible MIT/commercial (D-07 satisfait pour le moteur).
 - CLAN/MOR reste le cœur de valeur (standard de référence clinique) : le préserver évite la régression qu'aurait été un pivot vers une annotation UD non alignée.
 
-**Le verdict global est donc : Go conditionnel sur l'intégration CLAN headless.**
+**Le verdict global est donc : GO sur l'intégration CLAN headless** (validé de bout en bout — un vrai `%mor` a été produit sur Windows).
 
-### Items restants pour le Go définitif (Phase 2, tâche 1)
+### Preuve obtenue dans le spike
 
-1. **Corriger le bug de lecture `.cha`** du `mor.exe` porté (cause racine identifiée : `rewind` du runtime **msvcrt antique de MinGW.org 6.3.0** ne vide pas le buffer après EOF → le flux rend du garbage type-BOM). **Résolution : recompiler avec MinGW-w64/MSYS2 (runtime UCRT)** — voir `artifacts/BUILD-MOR-WINDOWS.md`. C'est la dernière marche avant un `%mor` produit de bout en bout.
-2. **Confirmer la licence de la grammaire MOR FR** (`fra.zip`) auprès de TalkBank (email macw@cmu.edu / issue GitHub).
+`mor` headless sur Windows (build MSYS, entrée via **stdin**) produit un tier `%mor` correct pour le français. Recette + invocation + preuve : `artifacts/BUILD-MOR-WINDOWS.md` et `artifacts/SPIKE-02-mor-output-sample.cha`.
 
-La stratégie de repli pure-Python (Section 5) reste documentée **en secours** uniquement, si le bug de portage (1) se révélait intraitable.
+### Items restants pour le Go définitif (Phase 2)
+
+1. **Confirmer la licence de la grammaire MOR FR** (`fra.zip`) auprès de TalkBank (email macw@cmu.edu / issue GitHub) — seul vrai bloqueur D-07 restant.
+2. **Finaliser le packaging du binaire** : retenir le build MSYS (avec `msys-2.0.dll` bundlée) OU porter proprement vers MinGW-w64/UCRT autonome ; intégrer via `subprocess` en **écrivant le `.cha` patient sur stdin de `mor`** (le mode "argument fichier" est cassé sur le portage Windows).
+3. **Parseur multi-lignes** : `clan_wrapper.parse_mor_tier` doit concaténer les lignes de continuation des tiers `%mor` (et idéalement lancer `post` pour lever les ambiguïtés `^`) avant le calcul de MLU.
+
+La stratégie de repli pure-Python (Section 5) n'est plus nécessaire — conservée pour mémoire uniquement.
 
 ---
 

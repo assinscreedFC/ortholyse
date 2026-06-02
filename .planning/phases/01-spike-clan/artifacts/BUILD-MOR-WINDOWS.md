@@ -83,20 +83,35 @@ Tentatives menées après le constat msvcrt :
 
 2. **MSYS natif (toolchain Cygwin-like, `/usr/bin/g++`)** : **COMPILE proprement** (`_WIN32` non défini, headers POSIX présents ; seul `sgtty.h` manque → shim). Le binaire **s'exécute et termine sans crash** (`EXIT=0`) : **le bug stdio 0xEF est CORRIGÉ** par la stdio POSIX de MSYS. Il faut lancer avec `stdin < /dev/null` (sinon mor attend une entrée interactive et se bloque).
 
-### Bug restant après MSYS — sortie d'analyse vide
+### RÉSOLU — `mor` produit un vrai `%mor` headless sur Windows (build MSYS)
 
-mor charge tout, lit le fichier (plus d'erreur « Illegal speaker »), atteint la fin, MAIS :
-- Il applique le mécanisme CLAN de **remplacement du fichier** (écrit un temp, supprime l'original, renomme le temp → nom d'origine).
-- Sur Windows ce cycle échoue : `Can't delete original file ... Perhaps it is opened by some application.` (sémantique POSIX « unlink d'un fichier ouvert » mal portée), et le temp `.mor.cex` reste à **0 octet** → analyse vide, et l'entrée peut être tronquée si entrée==sortie.
+Le bug « lecture par argument fichier » (le handle fichier rendait EOF/garbage et le mécanisme de remplacement de fichier échouait) est **contourné en alimentant mor via STDIN** au lieu d'un argument :
 
-### Résolution recommandée (Phase 2)
+```bash
+# Build MSYS (g++ Cygwin-like) + shim sgtty, déjà décrit ci-dessus.
+# Invocation qui MARCHE (entrée via stdin, pas en argument) :
+mor +M<dossier_grammaire>  <  patient.cha   > sortie.mor.cex
+# (lancer avec stdin redirigé ; sinon mor attend une entrée interactive)
+```
 
-La faisabilité est prouvée (build + exécution + grammaire). Le dernier obstacle est la **couche de fichiers I/O du portage Windows de CLAN** (lecture qui délivre vide + remplacement temp→original qui échoue). Deux voies pour la Phase 2 :
-- **(A) Durcir le portage** : corriger la gestion de fichiers de `cutt.cpp` sous Windows (ordre fermeture/unlink/rename, chemins relatifs après `chdir` de chargement grammaire, écriture directe d'un `.cex` distinct sans étape de remplacement). Effort de debug C dédié.
-- **(B) Builder mor sur Linux/macOS** (cible native d'unix-clan, où tout ce mécanisme fonctionne) et l'intégrer par plateforme (CI multi-OS), plutôt que de porter le I/O Windows.
+Résultat réel obtenu (preuve : `artifacts/SPIKE-02-mor-output-sample.cha`) :
+```
+*CHI:	le chat mange la souris .
+%mor:	pro:obj|le^det:art|le&m&sg n|chat&m
+	v|manger-IMP&2s^v|manger-PRES&SUB&13s
+	pro:obj|la^det:art|la&f&sg^co|la
+	... n|souris&f .
+*CHI:	il veut un gateau .
+%mor:	pro:sub|il v:mdllex|vouloir&PRES&3s^v:mdl|vouloir&PRES&3s pro|un&m&sg^det:art|un&m&sg ?|gateau .
+```
+→ **SPIKE-02 validé de bout en bout** : grammaire MOR FR appliquée, tier `%mor` lisible et correct (`?|gateau` = mot inconnu car écrit sans accent).
 
-Les deux restent compatibles avec un moteur CLAN embarqué (GPL+subprocess, modèle FFmpeg).
+**Pourquoi l'argument fichier échoue mais pas stdin** : le chemin "ouvrir le fichier nommé + remplacer in-place" de `cutt.cpp` est mal porté sur Windows (handle/unlink/rename, `chdir` du chargement grammaire). Le chemin "pipe stdin → sortie .cex" évite tout ça. Pour la Phase 2, c'est le mode d'intégration recommandé pour le wrapper Python (`subprocess`, écrire le `.cha` patient sur stdin de `mor`).
+
+### Finding pour le parseur (SPIKE-03)
+
+Testé sur le `%mor` réel : `clan_wrapper.parse_mor_tier` ne lit que la **1re ligne** du tier `%mor` (MLU sous-évaluée). Les tiers `%mor` réels s'étalent sur des **lignes de continuation** (indentées par tabulation, format CHAT). **Phase 2 : le parseur doit concaténer les lignes de continuation** avant comptage, et idéalement lancer `post` pour lever les ambiguïtés `^`.
 
 ## Conséquence Go/No-Go
 
-Faisabilité headless CLAN sur Windows = **démontrée à ~90 %** : build natif OK, grammaire FR + 41 813 entrées lexique + a/c-rules chargées, moteur d'analyse atteint. Reste un bug d'I/O **isolé et diagnostiqué** (runtime msvcrt vétuste), résolution claire (toolchain UCRT). CLAN reste le bon moteur (cœur de valeur = standard CLAN/MOR). GPL via subprocess = OK (précédent FFmpeg). → **Go conditionnel CLAN**, pas No-Go.
+Faisabilité headless CLAN sur Windows = **DÉMONTRÉE de bout en bout** : `mor` compile en natif (build MSYS), charge la grammaire FR + 41 813 entrées de lexique, et **produit un tier `%mor` correct** sur Windows (entrée via stdin). CLAN reste le moteur (cœur de valeur = standard CLAN/MOR). GPL via subprocess = OK (modèle FFmpeg). → **GO sur CLAN** (conditionné à : confirmation licence grammaire MOR FR + finalisation packaging build MSYS/UCRT + parseur multi-lignes).
