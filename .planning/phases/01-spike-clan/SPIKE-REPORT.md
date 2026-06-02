@@ -138,29 +138,34 @@ SKIPPED [1] Binaire 'mor' absent du PATH — test sauté en CI
 
 ## Verdict
 
-**Go conditionnel**
+**Go conditionnel sur la voie CLAN** (verdict révisé après compilation native réussie — voir `artifacts/BUILD-MOR-WINDOWS.md`)
+
+> **Correction d'un verdict intermédiaire prématuré.** Une première rédaction concluait « No-Go CLAN / pivot pure-Python ». Cette conclusion était fausse : elle reposait sur l'échec du build MinGW *out-of-the-box*, sans tenir compte du fait que la source unix-clan est **ouverte (GPL) et modifiable**. Après portage, un `mor.exe` headless natif Windows a été compilé et exécuté avec succès.
 
 Synthèse des trois SPIKE :
 
 | SPIKE | Critère | Résultat |
 |-------|---------|----------|
-| SPIKE-01 — Licence binaire CLAN | BSD-3 libre, redistribution autorisée | **GO** |
+| SPIKE-01 — Licence binaire WinCLAN | BSD-3 (GUI only — non utilisé pour le moteur) | **GO** |
+| SPIKE-01 — Licence moteur headless (unix-clan) | **GPL**, source ouverte/modifiable ; subprocess = agrégation (précédent FFmpeg déjà embarqué) | **GO** (compatible MIT/commercial) |
 | SPIKE-01 — Licence grammaire MOR FR | Non documentée, confirmation TalkBank en attente | **EN ATTENTE** |
-| SPIKE-02 — `mor` headless Windows | Impossible en l'état (WinCLAN GUI-only, unix-clan GPL + porting requis) | **BLOQUANT** (voie CLAN native) |
+| SPIKE-02 — `mor` headless Windows | **Compilé + exécuté** ; charge grammaire FR + 41 813 entrées lexique + a/c-rules. Reste 1 bug de lecture `.cha` (0xEF parasite) avant production `%mor` | **FAISABLE** (90 %, bug borné restant) |
 | SPIKE-03 — Parsing + MLU morphèmes | 2.667 calculé, plage normative [2.52, 3.52], 12 tests verts | **GO** |
 
-**Conclusion D-07 :** Les deux SPIKE bloquants sont :
-1. La licence de la grammaire MOR FR (EN ATTENTE)
-2. L'impossibilité d'un `mor` headless clé en main sur Windows (BLOQUANT)
+**Conclusion D-07 :** La voie **« embarquer CLAN headless sur Windows » est FAISABLE**, et non un No-Go :
 
-La voie **"embarquer CLAN headless sur Windows"** est un **No-Go sur la voie CLAN native** : elle exigerait de porter unix-clan (source GPL) sur Windows — travail fragile, non trivial, sous licence copyleft — en tension directe avec la contrainte « bundle invisible, zéro install ».
+- Le binaire `mor.exe` console se compile en natif Windows depuis la source GPL (recette : `-DUNX -U_WIN32 -funsigned-char` + 2 shims POSIX ; voir BUILD-MOR-WINDOWS.md). Pas besoin de MSYS2 ni de dépendance runtime.
+- GPL appelé en subprocess = simple agrégation, modèle identique à FFmpeg **déjà embarqué** dans Ortholyse → compatible MIT/commercial (D-07 satisfait pour le moteur).
+- CLAN/MOR reste le cœur de valeur (standard de référence clinique) : le préserver évite la régression qu'aurait été un pivot vers une annotation UD non alignée.
 
-**La voie recommandée est la stratégie de repli pure-Python** (voir Section 5), qui lève les deux blocages simultanément :
-- Pas de binaire POSIX à compiler/maintenir
-- Bibliothèques sous licences permissives (Apache 2.0 / BSD-3 / MIT)
-- pip-installable, multiplateforme, sans cauchemar de packaging
+**Le verdict global est donc : Go conditionnel sur l'intégration CLAN headless.**
 
-**Le verdict global est donc : No-Go sur l'intégration CLAN headless — Go conditionnel sur la voie pure-Python, à valider en Phase 2 Tâche 1.**
+### Items restants pour le Go définitif (Phase 2, tâche 1)
+
+1. **Corriger le bug de lecture `.cha`** du `mor.exe` porté (0xEF parasite en ligne 1, sur tout fichier y compris le `sample.cha` de CLAN) — investigation bornée côté `fontconvert.cpp` / buffers globaux. C'est la dernière marche avant un `%mor` produit de bout en bout.
+2. **Confirmer la licence de la grammaire MOR FR** (`fra.zip`) auprès de TalkBank (email macw@cmu.edu / issue GitHub).
+
+La stratégie de repli pure-Python (Section 5) reste documentée **en secours** uniquement, si le bug de portage (1) se révélait intraitable.
 
 ---
 
