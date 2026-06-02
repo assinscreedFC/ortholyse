@@ -1,0 +1,35 @@
+@UTF8
+@Begin
+@Languages:	fra
+@Corpus:	MTLN
+@Participants:	CHI Philippe Target_Child , MOT Mere Mother
+@ID:	fra|MTLN|CHI|2;6.0|male|||Target_Child|||
+@ID:	fra|MTLN|MOT|||female|||Mother|||
+@Comment:	PLACEHOLDER — corpus MTLN inaccessible sans authentification TalkBank.
+@Comment:	Ce fichier est une reconstruction representative basee sur les publications de
+@Comment:	Le Normand & Parisse (2002) et Parisse & Le Normand (2002), PMC8752861.
+@Comment:	Enfant : 30 mois (groupe 30 mo), MLU-morphemes cible : ~3.02 (plage 2.5-3.5)
+@Comment:	SOURCE: Pour le vrai fichier MTLN, telecharger depuis :
+@Comment:	  https://childes.talkbank.org/access/French/MTLN.html
+@Comment:	  (requiert inscription TalkBank gratuite)
+@Comment:	STATUT %mor: ABSENT dans ce placeholder — doit etre produit par `mor` FR
+@Date:	01-JAN-1992
+*CHI:	le chien court .
+*MOT:	oui le chien court vite .
+*CHI:	il veut jouer .
+*MOT:	tu veux jouer avec le ballon ?
+*CHI:	le ballon rouge .
+*MOT:	c'est le ballon rouge oui .
+*CHI:	maman regarde .
+*MOT:	je regarde quoi ?
+*CHI:	le petit chat la .
+*MOT:	ah oui le petit chat est la .
+*CHI:	il dort .
+*MOT:	oui il dort le petit chat .
+*CHI:	pas faire de bruit .
+*MOT:	d'accord on va pas faire de bruit .
+*CHI:	donne le gateau .
+*MOT:	tu veux un gateau ?
+*CHI:	un grand .
+*MOT:	un grand gateau ?
+@End

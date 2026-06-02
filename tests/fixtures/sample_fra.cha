@@ -1,0 +1,12 @@
+@UTF8
+@Begin
+@Languages:	fra
+@Participants:	CHI Enfant Target_Child
+@ID:	fra|test|CHI|2;6||||Target_Child|||
+*CHI:	le chat mange .
+%mor:	det|le n|chat v|manger-PRES&3S .
+*CHI:	il veut du lait .
+%mor:	pro|il v|vouloir-PRES&3S det:art|de+det|le n|lait .
+*CHI:	maman .
+%mor:	n|maman .
+@End
