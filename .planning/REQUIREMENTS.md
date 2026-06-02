@@ -77,17 +77,40 @@
 
 ## Traceability
 
-Rempli pendant la création du roadmap.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (à remplir par le roadmapper) | — | Pending |
+| SPIKE-01 | Phase 1 | Pending |
+| SPIKE-02 | Phase 1 | Pending |
+| SPIKE-03 | Phase 1 | Pending |
+| ENGINE-01 | Phase 2 | Pending |
+| ENGINE-02 | Phase 2 | Pending |
+| ENGINE-03 | Phase 2 | Pending |
+| ENGINE-04 | Phase 2 | Pending |
+| ENGINE-05 | Phase 2 | Pending |
+| METRIC-01 | Phase 3 | Pending |
+| METRIC-02 | Phase 3 | Pending |
+| METRIC-03 | Phase 3 | Pending |
+| METRIC-04 | Phase 3 | Pending |
+| METRIC-05 | Phase 3 | Pending |
+| METRIC-06 | Phase 3 | Pending |
+| INPUT-01 | Phase 4 | Pending |
+| INPUT-02 | Phase 4 | Pending |
+| INPUT-03 | Phase 4 | Pending |
+| PATIENT-01 | Phase 4 | Pending |
+| PATIENT-02 | Phase 4 | Pending |
+| PATIENT-03 | Phase 4 | Pending |
+| REPORT-01 | Phase 5 | Pending |
+| REPORT-02 | Phase 5 | Pending |
+| REPORT-03 | Phase 5 | Pending |
+| DIST-01 | Phase 6 | Pending |
+| DIST-02 | Phase 6 | Pending |
+| DIST-03 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 24 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 24 ⚠️
+- Mapped to phases: 24 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-02*
-*Last updated: 2026-06-02 after initial definition*
+*Last updated: 2026-06-02 after roadmap creation (traceability complete)*
