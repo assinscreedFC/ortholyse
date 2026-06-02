@@ -9,7 +9,7 @@
 
 - [ ] **SPIKE-01**: Vérifier que la licence CLAN/TalkBank autorise la redistribution des binaires CLAN dans l'application
 - [ ] **SPIKE-02**: Appeler `mor` avec la grammaire MOR française en CLI sur un `.cha` de test et obtenir le tier `%mor`
-- [ ] **SPIKE-03**: Parser la sortie CLAN (`%mor` + `mlu`) et valider une MLU en morphèmes sur un échantillon de référence
+- [x] **SPIKE-03**: Parser la sortie CLAN (`%mor` + `mlu`) et valider une MLU en morphèmes sur un échantillon de référence
 
 ### Moteur d'analyse
 
@@ -81,7 +81,7 @@
 |-------------|-------|--------|
 | SPIKE-01 | Phase 1 | Pending |
 | SPIKE-02 | Phase 1 | Pending |
-| SPIKE-03 | Phase 1 | Pending |
+| SPIKE-03 | Phase 1 | Complete |
 | ENGINE-01 | Phase 2 | Pending |
 | ENGINE-02 | Phase 2 | Pending |
 | ENGINE-03 | Phase 2 | Pending |

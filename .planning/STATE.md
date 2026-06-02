@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "01-01: checkpoint human-action Task 1 (CLANWin install + MOR FR licence)"
-last_updated: "2026-06-02T15:01:45.557Z"
-last_activity: 2026-06-02 -- Phase 01 execution started
+stopped_at: Completed 01-03-PLAN.md (plan 3/3 phase 01-spike-clan)
+last_updated: "2026-06-02T15:52:58.495Z"
+last_activity: 2026-06-02
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 ## Current Position
 
 Phase: 01 (spike-clan) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 01
-Last activity: 2026-06-02 -- Phase 01 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-02
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P03 | 25 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Init: Format pivot CHAT (.cha) pour interopérabilité et crédibilité
 - Init: Spike obligatoire en Phase 1 — toute la stratégie moteur dépend de la licence CLAN/TalkBank
 - [Phase 01]: Go conditionnel SPIKE-01 : binaire CLAN BSD-3 libre (redistribution autorisee), grammaire MOR FR en attente confirmation TalkBank (D-07)
+- [Phase 01]: No-Go voie CLAN headless Windows (WinCLAN GUI-only, unix-clan GPL+POSIX non portable)
+- [Phase 01]: Go conditionnel voie pure-Python : Stanza recommandée comme moteur Phase 2 Tâche 1
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-02T15:01:40.120Z
-Stopped at: 01-01: checkpoint human-action Task 1 (CLANWin install + MOR FR licence)
+Last session: 2026-06-02T15:52:58.485Z
+Stopped at: Completed 01-03-PLAN.md (plan 3/3 phase 01-spike-clan)
 Resume file: None

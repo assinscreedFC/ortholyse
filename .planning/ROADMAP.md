@@ -32,9 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Un rapport de spike écrit indique "Go" ou "No-Go" avec la stratégie de remplacement si No-Go
 **Plans**: 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — Wave 0 : licence CLAN/MOR FR (SPIKE-01) + install CLANWin + fixtures .cha
+- [x] 01-01-PLAN.md — Wave 0 : licence CLAN/MOR FR (SPIKE-01) + install CLANWin + fixtures .cha
 - [ ] 01-02-PLAN.md — Wave 1 : exécution headless de mor FR -> tier %mor (SPIKE-02)
-- [ ] 01-03-PLAN.md — Wave 2 : wrapper Python + parsing %mor + MLU morphèmes vs oracle MTLN + rapport Go/No-Go (SPIKE-03)
+- [x] 01-03-PLAN.md — Wave 2 : wrapper Python + parsing %mor + MLU morphèmes vs oracle MTLN + rapport Go/No-Go (SPIKE-03)
 
 ### Phase 2: Moteur d'analyse
 **Goal**: Le pipeline CLAN/CHAT/MOR remplace l'heuristique fragile — la transcription corrigée produit des métriques linguistiques fiables
@@ -102,7 +102,7 @@ Phases exécutées dans l'ordre numérique : 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Spike CLAN | 0/3 | Planned | - |
+| 1. Spike CLAN | 2/3 | In Progress|  |
 | 2. Moteur d'analyse | 0/TBD | Not started | - |
 | 3. Métriques et affichage | 0/TBD | Not started | - |
 | 4. Entrée et dossier patient | 0/TBD | Not started | - |
