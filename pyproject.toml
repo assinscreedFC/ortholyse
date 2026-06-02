@@ -66,6 +66,10 @@ testpaths = ["tests"]
 addopts = "-ra --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
 pythonpath = ["."]
 norecursedirs = ["app/models/test", "build", "dist", ".git"]
+markers = [
+    "unit: tests unitaires sans dépendance externe (CI-safe)",
+    "integration: tests d'intégration nécessitant des binaires/ressources externes",
+]
 
 [tool.coverage.run]
 source = ["app"]
