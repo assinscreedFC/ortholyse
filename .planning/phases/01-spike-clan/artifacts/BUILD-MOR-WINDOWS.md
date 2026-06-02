@@ -75,9 +75,27 @@ CURRENT OUTPUT FILE IS INCOMPLETE.
 - Cause : **`chattest()` lit le fichier jusqu'à EOF puis `rewind(fpin)` ne vide PAS le buffer de lecture** sur le **runtime msvcrt antique de MinGW.org 6.3.0** → le buffer périmé est relu par l'analyse. Remplacer ce `rewind` par `freopen`/`fseek` ne suffit pas (corruption plus profonde dans la couche I/O bufferisée du vieux msvcrt).
 - Effet de bord à connaître : `mor` écrit sa sortie **en écrasant le fichier d'entrée** par défaut → toujours travailler sur une **copie** (déjà noté D-06/Pitfall).
 
+### Suite de l'investigation — builds toolchains modernes (MSYS2)
+
+Tentatives menées après le constat msvcrt :
+
+1. **MinGW-w64 UCRT (`ucrt64`, g++ 16.1.0)** : ÉCHEC de compilation. Les headers MinGW-w64 **imposent `_WIN32` défini** (`#error Only Win32 target is supported!`), or le portage neutralisait `_WIN32` (`-U_WIN32`) pour éviter le chemin GUI Windows de CLAN (stdafx.h/Clan2.h/MFC). Incompatible sans réécrire la stratégie de defines.
+
+2. **MSYS natif (toolchain Cygwin-like, `/usr/bin/g++`)** : **COMPILE proprement** (`_WIN32` non défini, headers POSIX présents ; seul `sgtty.h` manque → shim). Le binaire **s'exécute et termine sans crash** (`EXIT=0`) : **le bug stdio 0xEF est CORRIGÉ** par la stdio POSIX de MSYS. Il faut lancer avec `stdin < /dev/null` (sinon mor attend une entrée interactive et se bloque).
+
+### Bug restant après MSYS — sortie d'analyse vide
+
+mor charge tout, lit le fichier (plus d'erreur « Illegal speaker »), atteint la fin, MAIS :
+- Il applique le mécanisme CLAN de **remplacement du fichier** (écrit un temp, supprime l'original, renomme le temp → nom d'origine).
+- Sur Windows ce cycle échoue : `Can't delete original file ... Perhaps it is opened by some application.` (sémantique POSIX « unlink d'un fichier ouvert » mal portée), et le temp `.mor.cex` reste à **0 octet** → analyse vide, et l'entrée peut être tronquée si entrée==sortie.
+
 ### Résolution recommandée (Phase 2)
 
-**Recompiler avec un toolchain moderne : MinGW-w64 via MSYS2 (runtime UCRT)**, et non le MinGW.org 6.3.0 + msvcrt. Cette classe de bug stdio (buffer non vidé après EOF+rewind) est précisément ce que l'UCRT corrige. Alternative : builder unix-clan sur Linux/macOS (où il fonctionne déjà — c'est sa cible) et soit cross-compiler, soit bundler le binaire correspondant par plateforme.
+La faisabilité est prouvée (build + exécution + grammaire). Le dernier obstacle est la **couche de fichiers I/O du portage Windows de CLAN** (lecture qui délivre vide + remplacement temp→original qui échoue). Deux voies pour la Phase 2 :
+- **(A) Durcir le portage** : corriger la gestion de fichiers de `cutt.cpp` sous Windows (ordre fermeture/unlink/rename, chemins relatifs après `chdir` de chargement grammaire, écriture directe d'un `.cex` distinct sans étape de remplacement). Effort de debug C dédié.
+- **(B) Builder mor sur Linux/macOS** (cible native d'unix-clan, où tout ce mécanisme fonctionne) et l'intégrer par plateforme (CI multi-OS), plutôt que de porter le I/O Windows.
+
+Les deux restent compatibles avec un moteur CLAN embarqué (GPL+subprocess, modèle FFmpeg).
 
 ## Conséquence Go/No-Go
 
