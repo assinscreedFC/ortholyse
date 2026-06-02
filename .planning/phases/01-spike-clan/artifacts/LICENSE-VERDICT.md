@@ -66,6 +66,41 @@ Inspecter les headers des fichiers `C:\TalkBank\CLAN\fra\*.cut` et `*.lex` pour 
 
 ---
 
+## MISE A JOUR 2026-06-02 (session interactive) — constats de terrain
+
+### Installation reelle effectuee
+
+- CLAN installe : `C:\TalkBank\CLAN\CLAN.EXE` (un seul executable, **pas de `mor.exe` separe**)
+- Grammaire MOR FR telechargee : `https://talkbank.org/0info/mor/fra.zip` (344 Ko) puis extraite vers `C:\TalkBank\CLAN\lib\fra\` (66 entrees, `cr.cut` + `lex/` presents)
+
+### Option C realisee — inspection des fichiers grammaire FR
+
+**Resultat : AUCUN en-tete de licence inline.** Les occurrences de "copyright"/"licencie" trouvees sont des entrees du lexique francais (mots du dictionnaire), pas une notice. → La licence de la grammaire MOR FR **reste non documentee** ; la demande humaine (email macw@cmu.edu / GitHub issue) demeure necessaire.
+
+### DECOUVERTE MAJEURE — WinCLAN (BSD-3) est GUI uniquement / le headless est GPL
+
+Source : page de telechargement officielle https://dali.talkbank.org/clan/
+
+- **WinCLAN (`clanwin.exe`)** = binaire GUI sous **BSD-3**. Verifie en pratique : lancer `CLAN.EXE mor +l... test.cha` en ligne de commande **ouvre la fenetre GUI et ne produit aucun fichier de sortie** — `mor` ne s'execute PAS en headless avec WinCLAN. La commande `mor` se tape dans la fenetre "Commands" du GUI.
+- **UnixCLAN (`unix-clan.zip`)** = fournit les commandes d'analyse en CLI (dont `mor`) **MAIS uniquement en SOURCE sous GNU GPL**, et **aucun binaire console pret-a-l'emploi n'est distribue** (citation : *"No binary command-line version is available. The Unix distribution provides only source code… distributed under the GNU General Public License."*).
+
+### Implication pour D-07 et la Phase 2 (embarque, invisible, headless)
+
+Le wrapper Python (D-05) a besoin d'un `mor` **headless** appele en `subprocess`. Le seul `mor` headless disponible vient d'**UnixCLAN = GPL**, qu'il faut **compiler depuis la source** (pas de binaire Windows prebuilt).
+
+- GPL via `subprocess` = **simple agregation** (precedent : FFmpeg, deja embarque dans Ortholyse) → **compatible avec une app MIT/commerciale** tant que le binaire `mor` reste un executable separe appele en sous-process (pas de linkage).
+- Obligations GPL a respecter pour CE binaire : fournir/offrir la source correspondante + conserver l'avis GPL.
+- Cout additionnel reel : **compiler unix-clan pour Windows** (toolchain C type MinGW) — etape de packaging non triviale, a valider.
+
+→ La voie BSD-3 (WinCLAN) ne sert PAS au moteur embarque (GUI only). Le moteur embarquable est **GPL (unix-clan compile)**. C'est une nuance qui modifie la lecture de D-07 (« totalement libre ») : GPL+agregation reste acceptable (modele FFmpeg) mais n'est pas « sans aucune contrainte ».
+
+### Deux items ouverts pour le Go definitif
+
+1. **Licence grammaire MOR FR** (`fra.zip`) — confirmation humaine TalkBank toujours requise.
+2. **Acceptabilite GPL + faisabilite compilation** d'unix-clan `mor` pour Windows (alternative : valider que le GUI WinCLAN suffit, ou retenir la strategie de repli Batchalign2/Stanza).
+
+---
+
 ## Verdict
 
 **SPIKE-01 : Go conditionnel**
