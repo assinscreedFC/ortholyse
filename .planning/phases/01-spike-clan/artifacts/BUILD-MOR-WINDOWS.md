@@ -58,16 +58,27 @@ Using c-rules: .../lib/cr.cut
 From file <t.cha>
 ```
 
-## Bug de portage restant (à corriger en Phase 2)
+## Bug de portage restant — CAUSE RACINE IDENTIFIÉE (à corriger en Phase 2)
 
-Sur TOUT `.cha` (y compris le `sample.cha` livré avec CLAN, donc indépendant de notre format) :
+Symptôme : sur TOUT `.cha` (y compris le `sample.cha` livré avec CLAN) :
 ```
 *** File "...": line 1.
 Illegal speaker character found: 0xef  (puis '�' après -funsigned-char)
 CURRENT OUTPUT FILE IS INCOMPLETE.
 ```
-Diagnostic : un octet `0xEF` parasite est vu en tête de ligne 1 par le lecteur d'analyse, alors que le fichier n'en contient pas (vérifié au hexdump). Le BOM est correctement géré par `chattest` (cutt.cpp:11618) et par le lecteur (cutt.cpp:12558/12572), donc la cause probable est la **couche de conversion de police/encodage** (`fontconvert.cpp`) ou un buffer global mal initialisé sous MinGW. C'est un bug borné à investiguer (≈ quelques heures), pas un blocage fondamental.
+
+### Diagnostic (instrumentation de `getc_cr`)
+
+- Le fichier sur disque est correct (1er octet `0x40` `@`, vérifié au hexdump ; une **ouverture fraîche** `fopen(name,"rb")` rend bien `0x40`).
+- Mais le handle `fpin` réutilisé par l'analyse, **à `ftell()==0`**, rend `0xEF` puis `0xFF` (octets type-BOM parasites) au lieu du contenu.
+- Aucun `ungetc` dans le code source ; `getc`/`rewind`/`fopen` sont les vrais (build ni `_MAC_CODE` ni `_WIN32`).
+- Cause : **`chattest()` lit le fichier jusqu'à EOF puis `rewind(fpin)` ne vide PAS le buffer de lecture** sur le **runtime msvcrt antique de MinGW.org 6.3.0** → le buffer périmé est relu par l'analyse. Remplacer ce `rewind` par `freopen`/`fseek` ne suffit pas (corruption plus profonde dans la couche I/O bufferisée du vieux msvcrt).
+- Effet de bord à connaître : `mor` écrit sa sortie **en écrasant le fichier d'entrée** par défaut → toujours travailler sur une **copie** (déjà noté D-06/Pitfall).
+
+### Résolution recommandée (Phase 2)
+
+**Recompiler avec un toolchain moderne : MinGW-w64 via MSYS2 (runtime UCRT)**, et non le MinGW.org 6.3.0 + msvcrt. Cette classe de bug stdio (buffer non vidé après EOF+rewind) est précisément ce que l'UCRT corrige. Alternative : builder unix-clan sur Linux/macOS (où il fonctionne déjà — c'est sa cible) et soit cross-compiler, soit bundler le binaire correspondant par plateforme.
 
 ## Conséquence Go/No-Go
 
-Faisabilité headless CLAN sur Windows = **démontrée à 90 %** (build + grammaire + lexique + moteur OK). Reste un bug de lecture isolé. CLAN reste le bon moteur (cœur de valeur = standard CLAN/MOR). GPL via subprocess = OK (précédent FFmpeg). → **Go conditionnel CLAN**, pas No-Go.
+Faisabilité headless CLAN sur Windows = **démontrée à ~90 %** : build natif OK, grammaire FR + 41 813 entrées lexique + a/c-rules chargées, moteur d'analyse atteint. Reste un bug d'I/O **isolé et diagnostiqué** (runtime msvcrt vétuste), résolution claire (toolchain UCRT). CLAN reste le bon moteur (cœur de valeur = standard CLAN/MOR). GPL via subprocess = OK (précédent FFmpeg). → **Go conditionnel CLAN**, pas No-Go.

@@ -162,7 +162,7 @@ Synthèse des trois SPIKE :
 
 ### Items restants pour le Go définitif (Phase 2, tâche 1)
 
-1. **Corriger le bug de lecture `.cha`** du `mor.exe` porté (0xEF parasite en ligne 1, sur tout fichier y compris le `sample.cha` de CLAN) — investigation bornée côté `fontconvert.cpp` / buffers globaux. C'est la dernière marche avant un `%mor` produit de bout en bout.
+1. **Corriger le bug de lecture `.cha`** du `mor.exe` porté (cause racine identifiée : `rewind` du runtime **msvcrt antique de MinGW.org 6.3.0** ne vide pas le buffer après EOF → le flux rend du garbage type-BOM). **Résolution : recompiler avec MinGW-w64/MSYS2 (runtime UCRT)** — voir `artifacts/BUILD-MOR-WINDOWS.md`. C'est la dernière marche avant un `%mor` produit de bout en bout.
 2. **Confirmer la licence de la grammaire MOR FR** (`fra.zip`) auprès de TalkBank (email macw@cmu.edu / issue GitHub).
 
 La stratégie de repli pure-Python (Section 5) reste documentée **en secours** uniquement, si le bug de portage (1) se révélait intraitable.
