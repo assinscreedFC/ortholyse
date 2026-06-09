@@ -172,3 +172,6 @@ output/
 .claude/
 gitleaks-*.json
 *.pre-phase*.bak
+
+# Planning docs archived in _planning-archive repo, not tracked here
+.planning/
